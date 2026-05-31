@@ -162,6 +162,12 @@ def cmd_status(args) -> None:
     print()
 
 
+def cmd_tui(args) -> None:
+    """Launch full-screen TUI."""
+    from .tui import main as tui_main
+    tui_main()
+
+
 def cmd_server(args) -> None:
     """Start the web viewer."""
     import sys as _sys
@@ -449,6 +455,9 @@ def main() -> None:
     p_addd.add_argument("--scope", default="ALL")
     p_addd.add_argument("--reason")
 
+    # tui
+    sub.add_parser("tui", help="Full-screen terminal UI (vim keys: j/k//, Enter, q)")
+
     # server
     p_srv = sub.add_parser("server", help="Start web viewer (http://localhost:39000)")
     p_srv.add_argument("--port", type=int, default=39000)
@@ -496,6 +505,7 @@ def main() -> None:
 
     commands = {
         "search": cmd_search,
+        "tui": cmd_tui,
         "server": cmd_server,
         "graphify": cmd_graphify,
         "sync": cmd_sync,
