@@ -147,6 +147,40 @@ def cmd_status(args) -> None:
     print()
 
 
+def cmd_sync(args) -> None:
+    """Export/import memory for cross-machine sync."""
+    from .sync import export_sync, import_sync, sync_status
+
+    if args.export:
+        stats = export_sync(commit=not args.no_commit)
+        print(f"✅ Exported: {stats['observations']} obs, {stats['decisions']} decisions, {stats['pending']} pending")
+        print(f"   File: {stats['chunk_file']}")
+        if stats["committed"]:
+            print("   Committed to git ✅")
+        else:
+            print("   Not committed (use git push manually or run without --no-commit)")
+    elif args.import_:
+        stats = import_sync()
+        print(f"✅ Imported: {stats['observations']} obs, {stats['decisions']} decisions, {stats['pending']} pending")
+        print(f"   Skipped own machine chunks: {stats['skipped_own_machine']}")
+    else:
+        status = sync_status()
+        print(f"\n🔄 RepoMem Sync Status")
+        print(f"  Machine:          {status['machine']}")
+        print(f"  Last export ID:   {status['last_exported_id']}")
+        if status["last_export_ts"]:
+            from .inject import _age_label
+            from datetime import datetime
+            age = _age_label(datetime.fromtimestamp(status["last_export_ts"]).date().isoformat())
+            print(f"  Last exported:    {age}")
+        print(f"  Chunk file:       {status['chunk_file']} ({'exists' if status['chunk_exists'] else 'missing'})")
+        if status["peer_chunks"]:
+            print(f"  Peer chunks:      {', '.join(status['peer_chunks'])}")
+        else:
+            print("  Peer chunks:      none")
+        print()
+
+
 def cmd_releases(args) -> None:
     """List releases."""
     db.init_db()
@@ -358,6 +392,12 @@ def main() -> None:
     p_addd.add_argument("--scope", default="ALL")
     p_addd.add_argument("--reason")
 
+    # sync
+    p_sync = sub.add_parser("sync", help="Cross-machine memory sync via git")
+    p_sync.add_argument("--export", action="store_true", help="Export to sync chunk")
+    p_sync.add_argument("--import", dest="import_", action="store_true", help="Import peer chunks")
+    p_sync.add_argument("--no-commit", action="store_true", help="Skip git commit after export")
+
     # releases
     p_rel = sub.add_parser("releases", help="List releases")
     p_rel.add_argument("--project", "-p")
@@ -389,6 +429,7 @@ def main() -> None:
 
     commands = {
         "search": cmd_search,
+        "sync": cmd_sync,
         "releases": cmd_releases,
         "branches": cmd_branches,
         "obsidian": cmd_obsidian,
