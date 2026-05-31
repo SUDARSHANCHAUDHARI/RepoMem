@@ -140,7 +140,20 @@ def build_context(project: Optional[str] = None) -> str:
             lines.append(f"║  {type_icon} [{o['type']}] {o['summary']}{age_str}\n")
         add_section("".join(lines))
 
-    # 4. Unresolved errors
+    # 4. Conflicts
+    conflicts = db.get_conflicts(project=project)
+    if conflicts:
+        seen_cids: set = set()
+        lines = ["║ ⚠️  CONFLICTS\n"]
+        for c in conflicts[:4]:
+            cid = c.get("conflict_id")
+            if cid and cid not in seen_cids:
+                seen_cids.add(cid)
+                lines.append(f"║  [{c['topic']}] {c['summary'][:80]}\n")
+        if len(lines) > 1:
+            add_section("".join(lines))
+
+    # 5. Unresolved errors
     errors = db.get_unresolved_errors(project=project)
     if errors:
         lines = ["║ UNRESOLVED ERRORS\n"]

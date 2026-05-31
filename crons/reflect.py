@@ -117,7 +117,7 @@ def step_flag_contradictions(conn, stats: dict) -> None:
         SELECT id, project, topic, summary, date
         FROM observations
         WHERE type='decision' AND is_stale=0 AND is_archived=0
-        ORDER BY project, topic, date DESC
+        ORDER BY project, topic, date DESC, id DESC
     """).fetchall()
 
     groups: dict[str, list] = {}
@@ -133,12 +133,18 @@ def step_flag_contradictions(conn, stats: dict) -> None:
     for group in groups.values():
         if len(group) < 2:
             continue
-        # Newest first; if newest contradicts older, flag older as stale
         newest = group[0]
         if contradiction_words.search(newest["summary"]):
+            # Use newest.id as the conflict_id to link the pair
+            conflict_id = newest["id"]
+            conn.execute(
+                "UPDATE observations SET conflict_id=? WHERE id=?",
+                (conflict_id, newest["id"])
+            )
             for older in group[1:]:
                 conn.execute(
-                    "UPDATE observations SET is_stale=1 WHERE id=?", (older["id"],)
+                    "UPDATE observations SET is_stale=1, conflict_id=? WHERE id=?",
+                    (conflict_id, older["id"])
                 )
                 flagged += 1
 

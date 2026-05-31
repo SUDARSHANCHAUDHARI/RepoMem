@@ -52,6 +52,7 @@ CREATE TABLE IF NOT EXISTS observations (
     is_resolved INTEGER NOT NULL DEFAULT 0,
     is_archived INTEGER NOT NULL DEFAULT 0,
     related_ids TEXT NOT NULL DEFAULT '',
+    conflict_id INTEGER,
     FOREIGN KEY (session_id) REFERENCES sessions(id)
 );
 
@@ -467,6 +468,26 @@ def get_unresolved_errors(project: Optional[str] = None) -> list[dict]:
 def resolve_error(error_id: int) -> None:
     with db() as conn:
         conn.execute("UPDATE errors SET is_resolved=1 WHERE id=?", (error_id,))
+
+
+# ── Conflicts ─────────────────────────────────────────────────────────────────
+
+def get_conflicts(project: Optional[str] = None) -> list[dict]:
+    """Return pairs of conflicting observations."""
+    with db() as conn:
+        if project:
+            rows = conn.execute("""
+                SELECT * FROM observations
+                WHERE conflict_id IS NOT NULL AND project=? AND is_archived=0
+                ORDER BY conflict_id, date DESC
+            """, (project,)).fetchall()
+        else:
+            rows = conn.execute("""
+                SELECT * FROM observations
+                WHERE conflict_id IS NOT NULL AND is_archived=0
+                ORDER BY conflict_id, date DESC
+            """).fetchall()
+        return [dict(r) for r in rows]
 
 
 # ── Stats ─────────────────────────────────────────────────────────────────────

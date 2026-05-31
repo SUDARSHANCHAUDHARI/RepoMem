@@ -182,40 +182,73 @@ def cmd_doctor(args) -> None:
     issues = []
     recommendations = []
 
-    stats = db.get_stats()
-
-    # Check DB size
-    from .config import DB_PATH
-    if DB_PATH.exists():
-        size_mb = DB_PATH.stat().st_size / 1024 / 1024
-        print(f"  DB size: {size_mb:.1f} MB")
-        if size_mb > 100:
-            issues.append("DB > 100MB — consider running `repomem defrag`")
-
-    # Check for stale observations
-    import sqlite3
-    conn = sqlite3.connect(str(db.DB_PATH))
+    conn = db.get_connection()
     try:
-        stale = conn.execute(
-            "SELECT COUNT(*) FROM observations WHERE is_stale=1").fetchone()[0]
-        archived = conn.execute(
-            "SELECT COUNT(*) FROM observations WHERE is_archived=1").fetchone()[0]
-        total = conn.execute(
-            "SELECT COUNT(*) FROM observations").fetchone()[0]
+        # DB size
+        import os as _os
+        from pathlib import Path as _Path
+        from .config import DB_PATH
+        db_path = _Path(_os.environ.get("REPOMEM_DIR", str(DB_PATH.parent))) / "memory.db"
+        if db_path.exists():
+            size_mb = db_path.stat().st_size / 1024 / 1024
+            print(f"  DB size:            {size_mb:.1f} MB")
+            if size_mb > 100:
+                issues.append("DB > 100MB — run `python3 ~/.repomem/crons/defrag.py`")
 
-        print(f"  Total observations: {total}")
-        print(f"  Stale:             {stale}")
-        print(f"  Archived:          {archived}")
+        # Observation counts
+        total = conn.execute("SELECT COUNT(*) FROM observations").fetchone()[0]
+        stale = conn.execute("SELECT COUNT(*) FROM observations WHERE is_stale=1").fetchone()[0]
+        archived = conn.execute("SELECT COUNT(*) FROM observations WHERE is_archived=1").fetchone()[0]
+        conflicts = conn.execute("SELECT COUNT(DISTINCT conflict_id) FROM observations WHERE conflict_id IS NOT NULL").fetchone()[0]
+        active = total - archived
 
-        if stale > total * 0.3:
-            issues.append(f"{stale} stale observations — run `repomem defrag`")
+        print(f"  Observations:       {active} active, {stale} stale, {archived} archived")
+        if stale > active * 0.3:
+            issues.append(f"{stale} stale observations (>{int(0.3*active)}) — run defrag")
 
-        # Check FTS5 sync
-        fts_count = conn.execute(
-            "SELECT COUNT(*) FROM observations_fts").fetchone()[0]
-        if abs(fts_count - (total - archived)) > 5:
-            issues.append(f"FTS5 index out of sync ({fts_count} vs {total - archived} obs)")
-            recommendations.append("Run: python -c \"from repomem.db import init_db; init_db()\"")
+        # Errors
+        errors = conn.execute("SELECT COUNT(*) FROM errors WHERE is_resolved=0").fetchone()[0]
+        print(f"  Unresolved errors:  {errors}")
+        if errors > 0:
+            issues.append(f"{errors} unresolved error(s) — run `repomem search error`")
+
+        # Conflicts
+        print(f"  Conflicts:          {conflicts}")
+        if conflicts > 0:
+            issues.append(f"{conflicts} conflicting decision pair(s) detected")
+            recommendations.append("Run `repomem decisions` to review and resolve")
+
+        # Entities
+        entities = conn.execute("SELECT COUNT(*) FROM entities").fetchone()[0]
+        print(f"  Entities tracked:   {entities}")
+
+        # Orphaned observations (session deleted)
+        orphaned = conn.execute("""
+            SELECT COUNT(*) FROM observations o
+            WHERE NOT EXISTS (SELECT 1 FROM sessions s WHERE s.id = o.session_id)
+        """).fetchone()[0]
+        if orphaned > 0:
+            issues.append(f"{orphaned} orphaned observations (missing session row)")
+
+        # FTS5 sync check
+        fts_count = conn.execute("SELECT COUNT(*) FROM observations_fts").fetchone()[0]
+        if abs(fts_count - active) > 5:
+            issues.append(f"FTS5 out of sync ({fts_count} indexed vs {active} active)")
+            recommendations.append("Run `python3 ~/.repomem/crons/defrag.py` to rebuild FTS5")
+
+        # Projects with no observations
+        projects_with_obs = conn.execute(
+            "SELECT COUNT(DISTINCT project) FROM observations WHERE is_archived=0"
+        ).fetchone()[0]
+        print(f"  Projects tracked:   {projects_with_obs}")
+
+        # Decisions
+        decisions = conn.execute("SELECT COUNT(*) FROM decisions WHERE is_superseded=0").fetchone()[0]
+        print(f"  Decisions:          {decisions}")
+
+        # Pending
+        pending = conn.execute("SELECT COUNT(*) FROM pending WHERE resolved_at IS NULL").fetchone()[0]
+        print(f"  Pending tasks:      {pending}")
 
     finally:
         conn.close()
