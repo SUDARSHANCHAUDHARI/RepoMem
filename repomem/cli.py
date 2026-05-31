@@ -147,6 +147,23 @@ def cmd_status(args) -> None:
     print()
 
 
+def cmd_obsidian(args) -> None:
+    """Export project memory to Obsidian vault."""
+    from .obsidian import export_project, export_all
+    from pathlib import Path
+
+    vault = Path(args.vault) if args.vault else None
+
+    if args.project:
+        path = export_project(args.project, vault=vault)
+        print(f"✅ Exported {args.project} → {path}")
+    else:
+        paths = export_all(vault=vault)
+        print(f"✅ Exported {len(paths)} projects to Obsidian")
+        for p in paths:
+            print(f"   {p}")
+
+
 def cmd_entities(args) -> None:
     """List known entities."""
     from .entity import get_entities, get_observations_for_entity
@@ -313,6 +330,11 @@ def main() -> None:
     p_addd.add_argument("--scope", default="ALL")
     p_addd.add_argument("--reason")
 
+    # obsidian
+    p_obs = sub.add_parser("obsidian", help="Export memory to Obsidian vault")
+    p_obs.add_argument("--project", "-p", help="Export single project (default: all)")
+    p_obs.add_argument("--vault", help="Override vault path")
+
     # entities
     p_ent = sub.add_parser("entities", help="List known entities")
     p_ent.add_argument("--project", "-p")
@@ -330,6 +352,7 @@ def main() -> None:
 
     commands = {
         "search": cmd_search,
+        "obsidian": cmd_obsidian,
         "entities": cmd_entities,
         "add": cmd_add,
         "pending": cmd_pending,
