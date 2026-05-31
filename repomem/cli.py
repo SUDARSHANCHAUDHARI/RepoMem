@@ -147,6 +147,32 @@ def cmd_status(args) -> None:
     print()
 
 
+def cmd_graphify(args) -> None:
+    """Show graphify analysis for current project."""
+    from .graphify import analyze
+    from .capture import detect_project
+
+    db.init_db()
+    project = args.project or detect_project()[0]
+    result = analyze(project, repo_path=args.repo or None, threshold=args.threshold)
+
+    if "error" in result:
+        print(f"⚠️  {result['error']}")
+        return
+
+    print(f"\n📊 Graphify: {project}")
+    print(f"  Nodes: {result['nodes']}  Edges: {result['edges']}  Communities: {result['communities']}")
+    print(f"  Graph: {result['graph_path']}")
+
+    if result["god_nodes"]:
+        print(f"\n  ⚡ God Nodes (≥{args.threshold} edges):")
+        for n in result["god_nodes"][:10]:
+            print(f"    {n['label']:40s} {n['edge_count']} edges")
+    else:
+        print(f"  No God Nodes found (threshold: {args.threshold} edges)")
+    print()
+
+
 def cmd_sync(args) -> None:
     """Export/import memory for cross-machine sync."""
     from .sync import export_sync, import_sync, sync_status
@@ -392,6 +418,12 @@ def main() -> None:
     p_addd.add_argument("--scope", default="ALL")
     p_addd.add_argument("--reason")
 
+    # graphify
+    p_gfy = sub.add_parser("graphify", help="Graphify analysis for current project")
+    p_gfy.add_argument("--project", "-p")
+    p_gfy.add_argument("--repo", help="Path to repo root (default: cwd)")
+    p_gfy.add_argument("--threshold", type=int, default=10, help="God node edge threshold")
+
     # sync
     p_sync = sub.add_parser("sync", help="Cross-machine memory sync via git")
     p_sync.add_argument("--export", action="store_true", help="Export to sync chunk")
@@ -429,6 +461,7 @@ def main() -> None:
 
     commands = {
         "search": cmd_search,
+        "graphify": cmd_graphify,
         "sync": cmd_sync,
         "releases": cmd_releases,
         "branches": cmd_branches,
