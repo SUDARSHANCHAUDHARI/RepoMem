@@ -49,6 +49,7 @@ echo -e "  ${GREEN}✅ $REPOMEM_DIR${NC}"
 # ── Install Python package ─────────────────────────────────────────────────────
 echo "Installing RepoMem Python package..."
 cp -r "$SCRIPT_DIR/repomem" "$REPOMEM_DIR/lib/"
+cp -r "$SCRIPT_DIR/server" "$REPOMEM_DIR/lib/"
 echo -e "  ${GREEN}✅ Package installed to $REPOMEM_DIR/lib/repomem${NC}"
 
 # ── Install crons ──────────────────────────────────────────────────────────────
@@ -131,6 +132,24 @@ if not already_wired:
     print("  ✅ SessionStart hook wired")
 else:
     print("  ⏭️  SessionStart hook already wired")
+
+# MCP server
+mcp_servers = settings.setdefault("mcpServers", {})
+mcp_cmd = [
+    f"{sys.executable}",
+    f"{repomem_lib}/server/mcp_server.py"
+]
+mcp_env = {"REPOMEM_INSTALL": repomem_lib}
+
+if "repomem" not in mcp_servers:
+    mcp_servers["repomem"] = {
+        "command": mcp_cmd[0],
+        "args": mcp_cmd[1:],
+        "env": mcp_env,
+    }
+    print("  ✅ MCP server wired")
+else:
+    print("  ⏭️  MCP server already wired")
 
 with open(settings_path, "w") as f:
     json.dump(settings, f, indent=2)
