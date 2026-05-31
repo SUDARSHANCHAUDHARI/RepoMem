@@ -147,6 +147,22 @@ def cmd_status(args) -> None:
     print()
 
 
+def cmd_server(args) -> None:
+    """Start the web viewer."""
+    import sys as _sys
+    server_path = os.path.join(os.path.dirname(__file__), "..", "server", "web_viewer.py")
+    # Also check installed location
+    installed = os.path.join(os.path.expanduser("~/.repomem/lib"), "server", "web_viewer.py")
+    if not os.path.exists(server_path) and os.path.exists(installed):
+        server_path = installed
+
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("web_viewer", server_path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    mod.run(port=args.port)
+
+
 def cmd_graphify(args) -> None:
     """Show graphify analysis for current project."""
     from .graphify import analyze
@@ -418,6 +434,10 @@ def main() -> None:
     p_addd.add_argument("--scope", default="ALL")
     p_addd.add_argument("--reason")
 
+    # server
+    p_srv = sub.add_parser("server", help="Start web viewer (http://localhost:39000)")
+    p_srv.add_argument("--port", type=int, default=39000)
+
     # graphify
     p_gfy = sub.add_parser("graphify", help="Graphify analysis for current project")
     p_gfy.add_argument("--project", "-p")
@@ -461,6 +481,7 @@ def main() -> None:
 
     commands = {
         "search": cmd_search,
+        "server": cmd_server,
         "graphify": cmd_graphify,
         "sync": cmd_sync,
         "releases": cmd_releases,
