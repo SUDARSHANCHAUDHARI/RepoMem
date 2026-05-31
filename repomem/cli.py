@@ -147,6 +147,85 @@ def cmd_status(args) -> None:
     print()
 
 
+def cmd_sync(args) -> None:
+    """Export/import memory for cross-machine sync."""
+    from .sync import export_sync, import_sync, sync_status
+
+    if args.export:
+        stats = export_sync(commit=not args.no_commit)
+        print(f"✅ Exported: {stats['observations']} obs, {stats['decisions']} decisions, {stats['pending']} pending")
+        print(f"   File: {stats['chunk_file']}")
+        if stats["committed"]:
+            print("   Committed to git ✅")
+        else:
+            print("   Not committed (use git push manually or run without --no-commit)")
+    elif args.import_:
+        stats = import_sync()
+        print(f"✅ Imported: {stats['observations']} obs, {stats['decisions']} decisions, {stats['pending']} pending")
+        print(f"   Skipped own machine chunks: {stats['skipped_own_machine']}")
+    else:
+        status = sync_status()
+        print(f"\n🔄 RepoMem Sync Status")
+        print(f"  Machine:          {status['machine']}")
+        print(f"  Last export ID:   {status['last_exported_id']}")
+        if status["last_export_ts"]:
+            from .inject import _age_label
+            from datetime import datetime
+            age = _age_label(datetime.fromtimestamp(status["last_export_ts"]).date().isoformat())
+            print(f"  Last exported:    {age}")
+        print(f"  Chunk file:       {status['chunk_file']} ({'exists' if status['chunk_exists'] else 'missing'})")
+        if status["peer_chunks"]:
+            print(f"  Peer chunks:      {', '.join(status['peer_chunks'])}")
+        else:
+            print("  Peer chunks:      none")
+        print()
+
+
+def cmd_releases(args) -> None:
+    """List releases."""
+    db.init_db()
+    releases = db.get_releases(project=args.project or None, limit=args.limit)
+    if not releases:
+        print("No releases recorded.")
+        return
+    print(f"\n{'Project':<20} {'Version':<12} {'Store':<12} {'Date'}")
+    print("-" * 65)
+    for r in releases:
+        print(f"{r['project']:<20} v{r['version_name']:<11} {r['store']:<12} {r['released_at']}")
+    print()
+
+
+def cmd_branches(args) -> None:
+    """List open branches."""
+    db.init_db()
+    branches = db.get_open_branches(project=args.project or None)
+    if not branches:
+        print("No open branches recorded.")
+        return
+    print(f"\n{'Project':<20} {'Branch':<35} {'Created'}")
+    print("-" * 65)
+    for b in branches:
+        print(f"{b['project']:<20} {b['branch']:<35} {b['created_at']}")
+    print()
+
+
+def cmd_obsidian(args) -> None:
+    """Export project memory to Obsidian vault."""
+    from .obsidian import export_project, export_all
+    from pathlib import Path
+
+    vault = Path(args.vault) if args.vault else None
+
+    if args.project:
+        path = export_project(args.project, vault=vault)
+        print(f"✅ Exported {args.project} → {path}")
+    else:
+        paths = export_all(vault=vault)
+        print(f"✅ Exported {len(paths)} projects to Obsidian")
+        for p in paths:
+            print(f"   {p}")
+
+
 def cmd_entities(args) -> None:
     """List known entities."""
     from .entity import get_entities, get_observations_for_entity
@@ -313,6 +392,26 @@ def main() -> None:
     p_addd.add_argument("--scope", default="ALL")
     p_addd.add_argument("--reason")
 
+    # sync
+    p_sync = sub.add_parser("sync", help="Cross-machine memory sync via git")
+    p_sync.add_argument("--export", action="store_true", help="Export to sync chunk")
+    p_sync.add_argument("--import", dest="import_", action="store_true", help="Import peer chunks")
+    p_sync.add_argument("--no-commit", action="store_true", help="Skip git commit after export")
+
+    # releases
+    p_rel = sub.add_parser("releases", help="List releases")
+    p_rel.add_argument("--project", "-p")
+    p_rel.add_argument("--limit", "-l", type=int, default=10)
+
+    # branches
+    p_br = sub.add_parser("branches", help="List open branches")
+    p_br.add_argument("--project", "-p")
+
+    # obsidian
+    p_obs = sub.add_parser("obsidian", help="Export memory to Obsidian vault")
+    p_obs.add_argument("--project", "-p", help="Export single project (default: all)")
+    p_obs.add_argument("--vault", help="Override vault path")
+
     # entities
     p_ent = sub.add_parser("entities", help="List known entities")
     p_ent.add_argument("--project", "-p")
@@ -330,6 +429,10 @@ def main() -> None:
 
     commands = {
         "search": cmd_search,
+        "sync": cmd_sync,
+        "releases": cmd_releases,
+        "branches": cmd_branches,
+        "obsidian": cmd_obsidian,
         "entities": cmd_entities,
         "add": cmd_add,
         "pending": cmd_pending,

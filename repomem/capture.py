@@ -204,8 +204,10 @@ def capture_session(session_summary: str, session_id: Optional[str] = None,
         link_observation(obs_id, project, obs.summary + " " + obs.detail)
         count += 1
 
-    # Detect and record errors from session text
+    # Detect and record errors, releases, branch activity
     _capture_errors(session_summary, project, session_id)
+    _capture_releases(session_summary, project, session_id)
+    _capture_branch(project, session_id)
 
     # Update session with obs count
     db.end_session(session_id, session_summary[:500], count)
@@ -258,3 +260,38 @@ def _capture_errors(text: str, project: str, session_id: str) -> None:
             continue
         seen.add(key)
         db.save_error(project, error_text, root_cause, fix, session_id)
+
+
+# ── Release detection ─────────────────────────────────────────────────────────
+
+_RELEASE_SIGNALS = re.compile(
+    r"(?:released?\s+v?|Play\s*Store\s+(?:upload|submitted?)|merged?\s+PR[:\s]+.*?v?)(\d+\.\d+[\.\d]*)",
+    re.IGNORECASE
+)
+
+
+def _capture_releases(text: str, project: str, session_id: str) -> None:
+    """Detect version release signals in session text."""
+    text = strip_private(text)
+    seen: set[str] = set()
+    for m in _RELEASE_SIGNALS.finditer(text):
+        version = m.group(1).strip()
+        if version in seen:
+            continue
+        seen.add(version)
+        db.save_release(project, version_name=version, session_id=session_id)
+
+
+# ── Branch tracking ───────────────────────────────────────────────────────────
+
+def _capture_branch(project: str, session_id: str) -> None:
+    """Record the current git branch for this project."""
+    try:
+        branch = subprocess.check_output(
+            ["git", "branch", "--show-current"],
+            stderr=subprocess.DEVNULL, cwd=os.getcwd()
+        ).decode().strip()
+        if branch and branch not in ("main", "master", ""):
+            db.save_branch(project, branch, session_id=session_id)
+    except Exception:
+        pass
