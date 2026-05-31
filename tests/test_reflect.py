@@ -58,8 +58,8 @@ def get_reflect_steps():
 def test_dedup_marks_similar_stale():
     from repomem.db import get_connection
     s = make_session()
-    make_obs(s.id, summary="Fixed crash in HomeViewModel state null")
-    make_obs(s.id, summary="Fixed crash in HomeViewModel when state is null")
+    make_obs(s.id, summary="Fixed crash in HomeViewModel when state is null on rotation")
+    make_obs(s.id, summary="Fixed crash in HomeViewModel when state is null after rotation")
 
     mod = get_reflect_steps()
     conn = get_connection()

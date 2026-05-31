@@ -20,8 +20,7 @@ def fresh_db():
 
 
 def test_init_db_creates_tables():
-    import sqlite3
-    conn = sqlite3.connect(str(db.DB_PATH))
+    conn = db.get_connection()
     tables = [r[0] for r in conn.execute(
         "SELECT name FROM sqlite_master WHERE type='table'"
     ).fetchall()]
@@ -31,6 +30,8 @@ def test_init_db_creates_tables():
     assert "decisions" in tables
     assert "pending" in tables
     assert "patterns" in tables
+    assert "entities" in tables
+    assert "errors" in tables
 
 
 def test_save_and_get_session():

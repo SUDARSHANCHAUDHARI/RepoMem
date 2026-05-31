@@ -140,7 +140,18 @@ def build_context(project: Optional[str] = None) -> str:
             lines.append(f"║  {type_icon} [{o['type']}] {o['summary']}{age_str}\n")
         add_section("".join(lines))
 
-    # 4. Cross-project patterns
+    # 4. Unresolved errors
+    errors = db.get_unresolved_errors(project=project)
+    if errors:
+        lines = ["║ UNRESOLVED ERRORS\n"]
+        for e in errors[:3]:
+            recurred = f" (recurred {e['recurred']}×)" if e["recurred"] else ""
+            lines.append(f"║  ❌ {e['error_text'][:100]}{recurred}\n")
+            if e["fix"]:
+                lines.append(f"║     fix: {e['fix'][:80]}\n")
+        add_section("".join(lines))
+
+    # 5. Cross-project patterns
     patterns = db.get_patterns(min_seen=2)[:3]
     if patterns:
         lines = ["║ PATTERNS (seen across projects)\n"]

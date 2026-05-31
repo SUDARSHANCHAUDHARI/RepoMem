@@ -116,6 +116,20 @@ CREATE TABLE IF NOT EXISTS patterns (
     date        TEXT NOT NULL
 );
 
+-- ── Errors ───────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS errors (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    project     TEXT NOT NULL,
+    error_text  TEXT NOT NULL,
+    root_cause  TEXT NOT NULL DEFAULT '',
+    fix         TEXT NOT NULL DEFAULT '',
+    recurred    INTEGER NOT NULL DEFAULT 0,
+    first_seen  TEXT NOT NULL,
+    last_seen   TEXT,
+    session_id  TEXT NOT NULL DEFAULT '',
+    is_resolved INTEGER NOT NULL DEFAULT 0
+);
+
 -- ── Entities ─────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS entities (
     id            INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -145,6 +159,8 @@ CREATE INDEX IF NOT EXISTS idx_pending_proj ON pending(project);
 CREATE INDEX IF NOT EXISTS idx_pending_res  ON pending(resolved_at);
 CREATE INDEX IF NOT EXISTS idx_decisions_sc ON decisions(scope);
 CREATE INDEX IF NOT EXISTS idx_sessions_proj  ON sessions(project);
+CREATE INDEX IF NOT EXISTS idx_errors_proj    ON errors(project);
+CREATE INDEX IF NOT EXISTS idx_errors_res     ON errors(is_resolved);
 CREATE INDEX IF NOT EXISTS idx_entities_name  ON entities(name);
 CREATE INDEX IF NOT EXISTS idx_entities_proj  ON entities(project);
 CREATE INDEX IF NOT EXISTS idx_elinks_obs     ON entity_links(obs_id);
@@ -152,9 +168,12 @@ CREATE INDEX IF NOT EXISTS idx_elinks_obs     ON entity_links(obs_id);
 
 
 def get_connection() -> sqlite3.Connection:
-    """Get a database connection with row factory."""
-    ensure_dirs()
-    conn = sqlite3.connect(str(DB_PATH))
+    """Get a database connection with row factory. Reads DB path dynamically so tests can override via REPOMEM_DIR env."""
+    import os as _os
+    from pathlib import Path as _Path
+    db_path = _Path(_os.environ.get("REPOMEM_DIR", str(DB_PATH.parent))) / "memory.db"
+    db_path.parent.mkdir(parents=True, exist_ok=True)
+    conn = sqlite3.connect(str(db_path))
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA journal_mode = WAL")
     conn.execute("PRAGMA foreign_keys = ON")
@@ -403,6 +422,51 @@ def get_patterns(topic: Optional[str] = None, min_seen: int = 1) -> list[dict]:
                 ORDER BY seen_count DESC
             """, (min_seen,)).fetchall()
         return [dict(r) for r in rows]
+
+
+# ── Errors ────────────────────────────────────────────────────────────────────
+
+def save_error(project: str, error_text: str, root_cause: str = "",
+               fix: str = "", session_id: str = "") -> int:
+    from datetime import date as _date
+    today = _date.today().isoformat()
+    with db() as conn:
+        # Check if same error already exists — increment recurred if so
+        existing = conn.execute(
+            "SELECT id FROM errors WHERE project=? AND error_text=? AND is_resolved=0",
+            (project, error_text[:500])
+        ).fetchone()
+        if existing:
+            conn.execute(
+                "UPDATE errors SET recurred=recurred+1, last_seen=? WHERE id=?",
+                (today, existing["id"])
+            )
+            return existing["id"]
+        cur = conn.execute("""
+            INSERT INTO errors (project, error_text, root_cause, fix, first_seen, session_id)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (project, error_text[:500], root_cause, fix, today, session_id))
+        return cur.lastrowid
+
+
+def get_unresolved_errors(project: Optional[str] = None) -> list[dict]:
+    with db() as conn:
+        if project:
+            rows = conn.execute("""
+                SELECT * FROM errors WHERE project=? AND is_resolved=0
+                ORDER BY recurred DESC, first_seen DESC
+            """, (project,)).fetchall()
+        else:
+            rows = conn.execute("""
+                SELECT * FROM errors WHERE is_resolved=0
+                ORDER BY project, recurred DESC
+            """).fetchall()
+        return [dict(r) for r in rows]
+
+
+def resolve_error(error_id: int) -> None:
+    with db() as conn:
+        conn.execute("UPDATE errors SET is_resolved=1 WHERE id=?", (error_id,))
 
 
 # ── Stats ─────────────────────────────────────────────────────────────────────

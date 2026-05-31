@@ -204,7 +204,57 @@ def capture_session(session_summary: str, session_id: Optional[str] = None,
         link_observation(obs_id, project, obs.summary + " " + obs.detail)
         count += 1
 
+    # Detect and record errors from session text
+    _capture_errors(session_summary, project, session_id)
+
     # Update session with obs count
     db.end_session(session_id, session_summary[:500], count)
 
     return count
+
+
+# ── Error detection ───────────────────────────────────────────────────────────
+
+# Patterns that signal an error in session text
+_ERROR_SIGNALS = re.compile(
+    r"(?:Exception|Error|Crash|FAILED|fatal|stack\s*trace|caused\s*by)[:\s]+([^\n]{10,200})",
+    re.IGNORECASE
+)
+
+# Patterns that signal a root cause
+_CAUSE_SIGNALS = re.compile(
+    r"(?:because|caused\s*by|root\s*cause|reason)[:\s]+([^\n]{10,200})",
+    re.IGNORECASE
+)
+
+# Patterns that signal a fix was applied
+_FIX_SIGNALS = re.compile(
+    r"(?:fixed?\s*by|resolved?\s*by|solution[:\s]+|workaround[:\s]+)([^\n]{10,200})",
+    re.IGNORECASE
+)
+
+
+def _capture_errors(text: str, project: str, session_id: str) -> None:
+    """Extract error signals from session text and save to errors table."""
+    text = strip_private(text)
+
+    root_cause = ""
+    fix = ""
+
+    cause_m = _CAUSE_SIGNALS.search(text)
+    if cause_m:
+        root_cause = cause_m.group(1).strip()[:200]
+
+    fix_m = _FIX_SIGNALS.search(text)
+    if fix_m:
+        fix = fix_m.group(1).strip()[:200]
+
+    seen: set[str] = set()
+    for m in _ERROR_SIGNALS.finditer(text):
+        error_text = m.group(1).strip()
+        error_text = re.sub(r"\s+", " ", error_text)
+        key = error_text[:80].lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        db.save_error(project, error_text, root_cause, fix, session_id)
