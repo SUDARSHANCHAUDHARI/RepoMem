@@ -26,6 +26,17 @@ def cmd_search(args) -> None:
     print(format_results(results, verbose=args.verbose))
 
 
+def _ensure_manual_session(project: str) -> None:
+    """Ensure a 'manual' sentinel session exists for CLI-sourced observations."""
+    import time as _t
+    with db.db() as conn:
+        if not conn.execute("SELECT id FROM sessions WHERE id='manual'").fetchone():
+            conn.execute(
+                "INSERT INTO sessions (id, project, folder, repo_path, started_at) VALUES ('manual',?,?,?,?)",
+                (project, "", "", int(_t.time()))
+            )
+
+
 def cmd_add(args) -> None:
     """Manually add an observation."""
     import time
@@ -35,6 +46,8 @@ def cmd_add(args) -> None:
     project, folder, _ = detect_project()
     if args.project:
         project = args.project
+
+    _ensure_manual_session(project)
 
     obs = Observation(
         session_id="manual",
@@ -73,6 +86,8 @@ def cmd_add_pending(args) -> None:
     project, _, _ = detect_project()
     if args.project:
         project = args.project
+
+    _ensure_manual_session(project)
 
     p = Pending(
         project=project,
