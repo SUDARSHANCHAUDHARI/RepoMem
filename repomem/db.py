@@ -116,6 +116,24 @@ CREATE TABLE IF NOT EXISTS patterns (
     date        TEXT NOT NULL
 );
 
+-- ── Entities ─────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS entities (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    name          TEXT NOT NULL,
+    type          TEXT NOT NULL,              -- class|file|library|concept
+    project       TEXT NOT NULL DEFAULT '',
+    first_seen    TEXT NOT NULL DEFAULT (date('now')),
+    mention_count INTEGER NOT NULL DEFAULT 1
+);
+
+CREATE TABLE IF NOT EXISTS entity_links (
+    entity_id INTEGER NOT NULL,
+    obs_id    INTEGER NOT NULL,
+    PRIMARY KEY (entity_id, obs_id),
+    FOREIGN KEY (entity_id) REFERENCES entities(id),
+    FOREIGN KEY (obs_id)    REFERENCES observations(id)
+);
+
 -- ── Indexes ───────────────────────────────────────────────────────────────────
 CREATE INDEX IF NOT EXISTS idx_obs_project  ON observations(project);
 CREATE INDEX IF NOT EXISTS idx_obs_date     ON observations(date);
@@ -126,7 +144,10 @@ CREATE INDEX IF NOT EXISTS idx_obs_archived ON observations(is_archived);
 CREATE INDEX IF NOT EXISTS idx_pending_proj ON pending(project);
 CREATE INDEX IF NOT EXISTS idx_pending_res  ON pending(resolved_at);
 CREATE INDEX IF NOT EXISTS idx_decisions_sc ON decisions(scope);
-CREATE INDEX IF NOT EXISTS idx_sessions_proj ON sessions(project);
+CREATE INDEX IF NOT EXISTS idx_sessions_proj  ON sessions(project);
+CREATE INDEX IF NOT EXISTS idx_entities_name  ON entities(name);
+CREATE INDEX IF NOT EXISTS idx_entities_proj  ON entities(project);
+CREATE INDEX IF NOT EXISTS idx_elinks_obs     ON entity_links(obs_id);
 """
 
 

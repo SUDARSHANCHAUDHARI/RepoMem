@@ -196,10 +196,12 @@ def capture_session(session_summary: str, session_id: Optional[str] = None,
             )
             observations.append(obs)
 
-    # Save all observations
+    # Save all observations + link entities
+    from .entity import link_observation
     count = 0
     for obs in observations:
-        db.save_observation(obs)
+        obs_id = db.save_observation(obs)
+        link_observation(obs_id, project, obs.summary + " " + obs.detail)
         count += 1
 
     # Update session with obs count

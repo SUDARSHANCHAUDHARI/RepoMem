@@ -147,6 +147,33 @@ def cmd_status(args) -> None:
     print()
 
 
+def cmd_entities(args) -> None:
+    """List known entities."""
+    from .entity import get_entities, get_observations_for_entity
+    db.init_db()
+
+    if args.name:
+        obs = get_observations_for_entity(args.name)
+        if not obs:
+            print(f"No observations found for entity: {args.name}")
+            return
+        print(f"\nObservations mentioning '{args.name}':\n")
+        for o in obs:
+            print(f"  [{o['type']}] {o['summary']}  ({o['date']})")
+        print()
+        return
+
+    entities = get_entities(project=args.project or None, min_mentions=args.min)
+    if not entities:
+        print("No entities recorded.")
+        return
+    print(f"\n{'Type':<10} {'Mentions':<9} {'Name'}")
+    print("-" * 50)
+    for e in entities:
+        print(f"{e['type']:<10} {e['mention_count']:<9} {e['name']}")
+    print()
+
+
 def cmd_doctor(args) -> None:
     """Health check — diagnose DB issues."""
     db.init_db()
@@ -253,6 +280,12 @@ def main() -> None:
     p_addd.add_argument("--scope", default="ALL")
     p_addd.add_argument("--reason")
 
+    # entities
+    p_ent = sub.add_parser("entities", help="List known entities")
+    p_ent.add_argument("--project", "-p")
+    p_ent.add_argument("--name", "-n", help="Show observations for a specific entity")
+    p_ent.add_argument("--min", type=int, default=1, help="Min mention count")
+
     # status
     p_status = sub.add_parser("status", help="Show DB stats")
     p_status.add_argument("--project", "-p")
@@ -264,6 +297,7 @@ def main() -> None:
 
     commands = {
         "search": cmd_search,
+        "entities": cmd_entities,
         "add": cmd_add,
         "pending": cmd_pending,
         "add-pending": cmd_add_pending,
