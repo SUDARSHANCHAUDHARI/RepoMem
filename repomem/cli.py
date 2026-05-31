@@ -1,0 +1,289 @@
+"""
+RepoMem CLI — command-line interface.
+Usage: python -m repomem <command> [args]
+"""
+from __future__ import annotations
+import sys
+import argparse
+from typing import Optional
+
+from . import db
+from .capture import detect_project
+from .search import search, format_results
+from .models import Decision, Pending, Pattern, Observation
+from .config import OBS_TYPES
+
+
+def cmd_search(args) -> None:
+    """Search observations."""
+    db.init_db()
+    results = search(
+        args.query,
+        project=args.project or None,
+        obs_type=args.type or None,
+        limit=args.limit
+    )
+    print(format_results(results, verbose=args.verbose))
+
+
+def cmd_add(args) -> None:
+    """Manually add an observation."""
+    import time
+    from datetime import date
+
+    db.init_db()
+    project, folder, _ = detect_project()
+    if args.project:
+        project = args.project
+
+    obs = Observation(
+        session_id="manual",
+        project=project,
+        folder=folder,
+        type=args.type,
+        topic=args.topic or "",
+        summary=args.summary,
+        detail=args.detail or "",
+        date=date.today().isoformat(),
+        created_at=int(time.time()),
+    )
+    obs_id = db.save_observation(obs)
+    print(f"✅ Saved observation #{obs_id}: [{args.type}] {args.summary}")
+
+
+def cmd_pending(args) -> None:
+    """List open pending tasks."""
+    db.init_db()
+    project = args.project or None
+    items = db.get_pending(project=project)
+
+    if not items:
+        print("No pending tasks." + (f" (project: {project})" if project else ""))
+        return
+
+    print(f"{'Project':<20} {'Pri':<4} {'Task'}")
+    print("-" * 70)
+    for p in items:
+        print(f"{p['project']:<20} {p['priority']:<4} {p['task']}")
+
+
+def cmd_add_pending(args) -> None:
+    """Add a pending task."""
+    db.init_db()
+    project, _, _ = detect_project()
+    if args.project:
+        project = args.project
+
+    p = Pending(
+        project=project,
+        task=args.task,
+        priority=args.priority,
+        session_id="manual"
+    )
+    pid = db.save_pending(p)
+    print(f"✅ Added pending task #{pid}: [{args.priority}] {args.task}")
+
+
+def cmd_resolve(args) -> None:
+    """Resolve a pending task or mark observation resolved."""
+    db.init_db()
+    db.resolve_pending(args.id)
+    print(f"✅ Resolved #{args.id}")
+
+
+def cmd_decisions(args) -> None:
+    """List architectural decisions."""
+    db.init_db()
+    project = args.project or None
+    decisions = db.get_decisions(scope=project)
+
+    if not decisions:
+        print("No decisions recorded.")
+        return
+
+    print(f"{'Scope':<20} {'Topic':<15} {'Decision'}")
+    print("-" * 80)
+    for d in decisions:
+        print(f"{d['scope']:<20} {d['topic']:<15} {d['decision']}")
+
+
+def cmd_add_decision(args) -> None:
+    """Add an architectural decision."""
+    db.init_db()
+    dec = Decision(
+        scope=args.scope or "ALL",
+        topic=args.topic,
+        decision=args.decision,
+        reason=args.reason or "",
+    )
+    did = db.save_decision(dec)
+    print(f"✅ Saved decision #{did}: [{args.scope}] {args.decision}")
+
+
+def cmd_status(args) -> None:
+    """Show DB stats."""
+    db.init_db()
+    project = args.project or None
+
+    if project:
+        stats = db.get_stats(project=project)
+        print(f"\n📊 RepoMem — {project}")
+        print(f"  Observations: {stats['observations']}")
+        print(f"  Sessions:     {stats['sessions']}")
+        print(f"  Pending:      {stats['pending']}")
+    else:
+        stats = db.get_stats()
+        print(f"\n📊 RepoMem — Global")
+        print(f"  Observations: {stats['observations']}")
+        print(f"  Sessions:     {stats['sessions']}")
+        print(f"  Pending:      {stats['pending']}")
+        print(f"  Decisions:    {stats['decisions']}")
+        print(f"  Projects:     {len(stats['projects'])}")
+        print(f"  DB size:      {stats['db_size_kb']} KB")
+        if stats["projects"]:
+            print(f"\n  Projects tracked:")
+            for p in sorted(stats["projects"]):
+                print(f"    • {p}")
+    print()
+
+
+def cmd_doctor(args) -> None:
+    """Health check — diagnose DB issues."""
+    db.init_db()
+    print("\n🩺 RepoMem Doctor\n")
+
+    issues = []
+    recommendations = []
+
+    stats = db.get_stats()
+
+    # Check DB size
+    from .config import DB_PATH
+    if DB_PATH.exists():
+        size_mb = DB_PATH.stat().st_size / 1024 / 1024
+        print(f"  DB size: {size_mb:.1f} MB")
+        if size_mb > 100:
+            issues.append("DB > 100MB — consider running `repomem defrag`")
+
+    # Check for stale observations
+    import sqlite3
+    conn = sqlite3.connect(str(db.DB_PATH))
+    try:
+        stale = conn.execute(
+            "SELECT COUNT(*) FROM observations WHERE is_stale=1").fetchone()[0]
+        archived = conn.execute(
+            "SELECT COUNT(*) FROM observations WHERE is_archived=1").fetchone()[0]
+        total = conn.execute(
+            "SELECT COUNT(*) FROM observations").fetchone()[0]
+
+        print(f"  Total observations: {total}")
+        print(f"  Stale:             {stale}")
+        print(f"  Archived:          {archived}")
+
+        if stale > total * 0.3:
+            issues.append(f"{stale} stale observations — run `repomem defrag`")
+
+        # Check FTS5 sync
+        fts_count = conn.execute(
+            "SELECT COUNT(*) FROM observations_fts").fetchone()[0]
+        if abs(fts_count - (total - archived)) > 5:
+            issues.append(f"FTS5 index out of sync ({fts_count} vs {total - archived} obs)")
+            recommendations.append("Run: python -c \"from repomem.db import init_db; init_db()\"")
+
+    finally:
+        conn.close()
+
+    print()
+    if not issues:
+        print("  ✅ All checks passed — DB is healthy\n")
+    else:
+        for issue in issues:
+            print(f"  ⚠️  {issue}")
+        print()
+        for rec in recommendations:
+            print(f"  💡 {rec}")
+        print()
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        prog="repomem",
+        description="RepoMem — persistent memory for AI coding agents"
+    )
+    sub = parser.add_subparsers(dest="command", required=True)
+
+    # search
+    p_search = sub.add_parser("search", help="Search observations")
+    p_search.add_argument("query")
+    p_search.add_argument("--project", "-p")
+    p_search.add_argument("--type", "-t", choices=OBS_TYPES)
+    p_search.add_argument("--limit", "-l", type=int, default=20)
+    p_search.add_argument("--verbose", "-v", action="store_true")
+
+    # add
+    p_add = sub.add_parser("add", help="Add an observation")
+    p_add.add_argument("--type", "-t", required=True, choices=OBS_TYPES)
+    p_add.add_argument("--summary", "-s", required=True)
+    p_add.add_argument("--detail", "-d")
+    p_add.add_argument("--topic")
+    p_add.add_argument("--project", "-p")
+
+    # pending
+    p_pending = sub.add_parser("pending", help="List pending tasks")
+    p_pending.add_argument("--project", "-p")
+
+    # add-pending
+    p_addp = sub.add_parser("add-pending", help="Add a pending task")
+    p_addp.add_argument("task")
+    p_addp.add_argument("--project", "-p")
+    p_addp.add_argument("--priority", default="P2", choices=["P1", "P2", "P3"])
+
+    # resolve
+    p_resolve = sub.add_parser("resolve", help="Resolve a pending task")
+    p_resolve.add_argument("id", type=int)
+
+    # decisions
+    p_dec = sub.add_parser("decisions", help="List decisions")
+    p_dec.add_argument("--project", "-p")
+
+    # add-decision
+    p_addd = sub.add_parser("add-decision", help="Add an architectural decision")
+    p_addd.add_argument("--decision", required=True)
+    p_addd.add_argument("--topic", required=True)
+    p_addd.add_argument("--scope", default="ALL")
+    p_addd.add_argument("--reason")
+
+    # status
+    p_status = sub.add_parser("status", help="Show DB stats")
+    p_status.add_argument("--project", "-p")
+
+    # doctor
+    sub.add_parser("doctor", help="Health check")
+
+    args = parser.parse_args()
+
+    commands = {
+        "search": cmd_search,
+        "add": cmd_add,
+        "pending": cmd_pending,
+        "add-pending": cmd_add_pending,
+        "resolve": cmd_resolve,
+        "decisions": cmd_decisions,
+        "add-decision": cmd_add_decision,
+        "status": cmd_status,
+        "doctor": cmd_doctor,
+    }
+
+    handler = commands.get(args.command)
+    if handler:
+        try:
+            handler(args)
+        except KeyboardInterrupt:
+            pass
+        except Exception as e:
+            print(f"Error: {e}", file=sys.stderr)
+            sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

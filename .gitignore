@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+.venv/
+venv/
+env/
+
+# RepoMem data — never commit personal memory
+*.db
+*.db-shm
+*.db-wal
+.repomem/
+
+# Tests
+.pytest_cache/
+.coverage
+htmlcov/
+
+# macOS
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Env
+.env
+.env.*
+secrets.*
+credentials.*
+
+# Claude Code
+.claude-plugin-config.json
+.claude/settings.local.json
+
+# Logs
+*.log
+
+# Flow / planning (local only)
+.flow/
