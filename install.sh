@@ -19,20 +19,27 @@ echo ""
 
 # ── Check Python ───────────────────────────────────────────────────────────────
 echo "Checking Python..."
-if ! command -v python3 &>/dev/null; then
-    echo -e "${RED}❌ Python 3.11+ required but not found${NC}"
+
+# Find Python 3.11+ — prefer explicit versioned binaries over system python3
+PYTHON3=""
+for candidate in python3.13 python3.12 python3.11 python3; do
+    if command -v "$candidate" &>/dev/null; then
+        ver=$("$candidate" -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
+        major=$(echo "$ver" | cut -d. -f1)
+        minor=$(echo "$ver" | cut -d. -f2)
+        if [ "$major" -ge 3 ] && [ "$minor" -ge 11 ]; then
+            PYTHON3="$candidate"
+            PY_VERSION="$ver"
+            break
+        fi
+    fi
+done
+
+if [ -z "$PYTHON3" ]; then
+    echo -e "${RED}❌ Python 3.11+ required but not found (tried python3.13/3.12/3.11/python3)${NC}"
     exit 1
 fi
-
-PY_VERSION=$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
-PY_MAJOR=$(echo "$PY_VERSION" | cut -d. -f1)
-PY_MINOR=$(echo "$PY_VERSION" | cut -d. -f2)
-
-if [ "$PY_MAJOR" -lt 3 ] || ([ "$PY_MAJOR" -eq 3 ] && [ "$PY_MINOR" -lt 11 ]); then
-    echo -e "${RED}❌ Python 3.11+ required, found $PY_VERSION${NC}"
-    exit 1
-fi
-echo -e "  ${GREEN}✅ Python $PY_VERSION${NC}"
+echo -e "  ${GREEN}✅ Python $PY_VERSION ($PYTHON3)${NC}"
 
 # ── Create directories ─────────────────────────────────────────────────────────
 echo "Creating directories..."
@@ -76,7 +83,7 @@ fi
 SETTINGS="$CLAUDE_DIR/settings.json"
 if [ -f "$SETTINGS" ]; then
     echo "Wiring hooks into settings.json..."
-    python3 - <<'PYTHON'
+    $PYTHON3 - <<'PYTHON'
 import json, os, sys
 
 settings_path = os.path.expanduser("~/.claude/settings.json")
@@ -89,7 +96,7 @@ hooks = settings.setdefault("hooks", {})
 
 # Stop hook — capture
 stop_hooks = hooks.setdefault("Stop", [])
-capture_cmd = f"REPOMEM_INSTALL={repomem_lib} python3 ~/.claude/hooks/memory-capture.py"
+capture_cmd = f"REPOMEM_INSTALL={repomem_lib} python3.11 ~/.claude/hooks/memory-capture.py"
 already_wired = any(
     capture_cmd in str(h) for entry in stop_hooks for h in entry.get("hooks", [])
 )
@@ -108,7 +115,7 @@ else:
 
 # SessionStart hook — inject
 start_hooks = hooks.setdefault("SessionStart", [])
-inject_cmd = f"REPOMEM_INSTALL={repomem_lib} python3 ~/.claude/hooks/memory-inject.py"
+inject_cmd = f"REPOMEM_INSTALL={repomem_lib} python3.11 ~/.claude/hooks/memory-inject.py"
 already_wired = any(
     inject_cmd in str(h) for entry in start_hooks for h in entry.get("hooks", [])
 )
@@ -134,15 +141,15 @@ fi
 
 # ── Add crons ──────────────────────────────────────────────────────────────────
 echo "Adding cron jobs..."
-CRON_REFLECT="0 2 * * * REPOMEM_INSTALL=$REPOMEM_DIR/lib python3 $REPOMEM_DIR/crons/reflect.py >> $REPOMEM_DIR/logs/reflect.log 2>&1"
-CRON_DEFRAG="0 3 * * 0 REPOMEM_INSTALL=$REPOMEM_DIR/lib python3 $REPOMEM_DIR/crons/defrag.py >> $REPOMEM_DIR/logs/defrag.log 2>&1"
+CRON_REFLECT="0 2 * * * REPOMEM_INSTALL=$REPOMEM_DIR/lib $PYTHON3 $REPOMEM_DIR/crons/reflect.py >> $REPOMEM_DIR/logs/reflect.log 2>&1"
+CRON_DEFRAG="0 3 * * 0 REPOMEM_INSTALL=$REPOMEM_DIR/lib $PYTHON3 $REPOMEM_DIR/crons/defrag.py >> $REPOMEM_DIR/logs/defrag.log 2>&1"
 
 (crontab -l 2>/dev/null; echo "$CRON_REFLECT"; echo "$CRON_DEFRAG") | sort -u | crontab -
 echo -e "  ${GREEN}✅ Cron jobs added (reflect: 2am daily, defrag: Sunday 3am)${NC}"
 
 # ── Initialize DB ──────────────────────────────────────────────────────────────
 echo "Initializing database..."
-REPOMEM_INSTALL="$REPOMEM_DIR/lib" python3 -c "
+REPOMEM_INSTALL="$REPOMEM_DIR/lib" $PYTHON3 -c "
 import sys; sys.path.insert(0, '$REPOMEM_DIR/lib')
 from repomem.db import init_db; init_db()
 print('  ✅ Database initialized: $REPOMEM_DIR/memory.db')
