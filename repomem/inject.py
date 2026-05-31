@@ -164,7 +164,16 @@ def build_context(project: Optional[str] = None) -> str:
         except Exception:
             pass
 
-    # 6. Unresolved errors
+    # 6. Graphify god nodes
+    try:
+        from .graphify import build_graph_context
+        graph_ctx = build_graph_context(project)
+        if graph_ctx:
+            add_section(graph_ctx)
+    except Exception:
+        pass
+
+    # 7. Unresolved errors
     errors = db.get_unresolved_errors(project=project)
     if errors:
         lines = ["║ UNRESOLVED ERRORS\n"]
