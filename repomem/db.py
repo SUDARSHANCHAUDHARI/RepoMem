@@ -117,6 +117,32 @@ CREATE TABLE IF NOT EXISTS patterns (
     date        TEXT NOT NULL
 );
 
+-- ── Releases ─────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS releases (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    project      TEXT NOT NULL,
+    version_name TEXT NOT NULL,
+    version_code INTEGER,
+    released_at  TEXT NOT NULL,
+    store        TEXT NOT NULL DEFAULT 'playstore',
+    notes        TEXT NOT NULL DEFAULT '',
+    session_id   TEXT NOT NULL DEFAULT ''
+);
+
+-- ── Branches ──────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS branches (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    project     TEXT NOT NULL,
+    branch      TEXT NOT NULL,
+    pr_number   INTEGER,
+    pr_url      TEXT NOT NULL DEFAULT '',
+    status      TEXT NOT NULL DEFAULT 'open',
+    purpose     TEXT NOT NULL DEFAULT '',
+    created_at  TEXT NOT NULL,
+    merged_at   TEXT,
+    session_id  TEXT NOT NULL DEFAULT ''
+);
+
 -- ── Errors ───────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS errors (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -160,6 +186,9 @@ CREATE INDEX IF NOT EXISTS idx_pending_proj ON pending(project);
 CREATE INDEX IF NOT EXISTS idx_pending_res  ON pending(resolved_at);
 CREATE INDEX IF NOT EXISTS idx_decisions_sc ON decisions(scope);
 CREATE INDEX IF NOT EXISTS idx_sessions_proj  ON sessions(project);
+CREATE INDEX IF NOT EXISTS idx_releases_proj  ON releases(project);
+CREATE INDEX IF NOT EXISTS idx_branches_proj  ON branches(project);
+CREATE INDEX IF NOT EXISTS idx_branches_st    ON branches(status);
 CREATE INDEX IF NOT EXISTS idx_errors_proj    ON errors(project);
 CREATE INDEX IF NOT EXISTS idx_errors_res     ON errors(is_resolved);
 CREATE INDEX IF NOT EXISTS idx_entities_name  ON entities(name);
@@ -468,6 +497,87 @@ def get_unresolved_errors(project: Optional[str] = None) -> list[dict]:
 def resolve_error(error_id: int) -> None:
     with db() as conn:
         conn.execute("UPDATE errors SET is_resolved=1 WHERE id=?", (error_id,))
+
+
+# ── Releases ─────────────────────────────────────────────────────────────────
+
+def save_release(project: str, version_name: str, version_code: Optional[int] = None,
+                 store: str = "playstore", notes: str = "", session_id: str = "") -> int:
+    from datetime import date as _date
+    with db() as conn:
+        cur = conn.execute("""
+            INSERT INTO releases (project, version_name, version_code, released_at, store, notes, session_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, (project, version_name, version_code, _date.today().isoformat(), store, notes, session_id))
+        return cur.lastrowid
+
+
+def get_releases(project: Optional[str] = None, limit: int = 5) -> list[dict]:
+    with db() as conn:
+        if project:
+            rows = conn.execute("""
+                SELECT * FROM releases WHERE project=?
+                ORDER BY released_at DESC LIMIT ?
+            """, (project, limit)).fetchall()
+        else:
+            rows = conn.execute("""
+                SELECT * FROM releases ORDER BY released_at DESC LIMIT ?
+            """, (limit,)).fetchall()
+        return [dict(r) for r in rows]
+
+
+def get_last_release(project: str) -> Optional[dict]:
+    with db() as conn:
+        row = conn.execute("""
+            SELECT * FROM releases WHERE project=?
+            ORDER BY released_at DESC, id DESC LIMIT 1
+        """, (project,)).fetchone()
+        return dict(row) if row else None
+
+
+# ── Branches ─────────────────────────────────────────────────────────────────
+
+def save_branch(project: str, branch: str, purpose: str = "",
+                session_id: str = "") -> int:
+    from datetime import date as _date
+    with db() as conn:
+        # Update existing open branch or insert new
+        existing = conn.execute(
+            "SELECT id FROM branches WHERE project=? AND branch=? AND status='open'",
+            (project, branch)
+        ).fetchone()
+        if existing:
+            return existing["id"]
+        cur = conn.execute("""
+            INSERT INTO branches (project, branch, purpose, created_at, session_id)
+            VALUES (?, ?, ?, ?, ?)
+        """, (project, branch, purpose, _date.today().isoformat(), session_id))
+        return cur.lastrowid
+
+
+def merge_branch(project: str, branch: str, pr_number: Optional[int] = None,
+                 pr_url: str = "") -> None:
+    from datetime import date as _date
+    with db() as conn:
+        conn.execute("""
+            UPDATE branches SET status='merged', merged_at=?, pr_number=?, pr_url=?
+            WHERE project=? AND branch=? AND status='open'
+        """, (_date.today().isoformat(), pr_number, pr_url or "", project, branch))
+
+
+def get_open_branches(project: Optional[str] = None) -> list[dict]:
+    with db() as conn:
+        if project:
+            rows = conn.execute("""
+                SELECT * FROM branches WHERE project=? AND status='open'
+                ORDER BY created_at DESC
+            """, (project,)).fetchall()
+        else:
+            rows = conn.execute("""
+                SELECT * FROM branches WHERE status='open'
+                ORDER BY project, created_at DESC
+            """).fetchall()
+        return [dict(r) for r in rows]
 
 
 # ── Conflicts ─────────────────────────────────────────────────────────────────

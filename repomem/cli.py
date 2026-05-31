@@ -147,6 +147,34 @@ def cmd_status(args) -> None:
     print()
 
 
+def cmd_releases(args) -> None:
+    """List releases."""
+    db.init_db()
+    releases = db.get_releases(project=args.project or None, limit=args.limit)
+    if not releases:
+        print("No releases recorded.")
+        return
+    print(f"\n{'Project':<20} {'Version':<12} {'Store':<12} {'Date'}")
+    print("-" * 65)
+    for r in releases:
+        print(f"{r['project']:<20} v{r['version_name']:<11} {r['store']:<12} {r['released_at']}")
+    print()
+
+
+def cmd_branches(args) -> None:
+    """List open branches."""
+    db.init_db()
+    branches = db.get_open_branches(project=args.project or None)
+    if not branches:
+        print("No open branches recorded.")
+        return
+    print(f"\n{'Project':<20} {'Branch':<35} {'Created'}")
+    print("-" * 65)
+    for b in branches:
+        print(f"{b['project']:<20} {b['branch']:<35} {b['created_at']}")
+    print()
+
+
 def cmd_obsidian(args) -> None:
     """Export project memory to Obsidian vault."""
     from .obsidian import export_project, export_all
@@ -330,6 +358,15 @@ def main() -> None:
     p_addd.add_argument("--scope", default="ALL")
     p_addd.add_argument("--reason")
 
+    # releases
+    p_rel = sub.add_parser("releases", help="List releases")
+    p_rel.add_argument("--project", "-p")
+    p_rel.add_argument("--limit", "-l", type=int, default=10)
+
+    # branches
+    p_br = sub.add_parser("branches", help="List open branches")
+    p_br.add_argument("--project", "-p")
+
     # obsidian
     p_obs = sub.add_parser("obsidian", help="Export memory to Obsidian vault")
     p_obs.add_argument("--project", "-p", help="Export single project (default: all)")
@@ -352,6 +389,8 @@ def main() -> None:
 
     commands = {
         "search": cmd_search,
+        "releases": cmd_releases,
+        "branches": cmd_branches,
         "obsidian": cmd_obsidian,
         "entities": cmd_entities,
         "add": cmd_add,

@@ -153,7 +153,18 @@ def build_context(project: Optional[str] = None) -> str:
         if len(lines) > 1:
             add_section("".join(lines))
 
-    # 5. Unresolved errors
+    # 5. Last release warning (if > 90 days ago)
+    last_release = db.get_last_release(project=project)
+    if last_release:
+        age = _age_label(last_release["released_at"])
+        try:
+            days_old = (date.today() - date.fromisoformat(last_release["released_at"])).days
+            if days_old > 90:
+                add_section(f"║ ⚠️  Last release: v{last_release['version_name']} ({age})\n")
+        except Exception:
+            pass
+
+    # 6. Unresolved errors
     errors = db.get_unresolved_errors(project=project)
     if errors:
         lines = ["║ UNRESOLVED ERRORS\n"]
