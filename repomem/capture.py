@@ -12,7 +12,7 @@ from typing import Optional
 
 from .config import (
     PRIVATE_TAG_START, PRIVATE_TAG_END,
-    OBS_TYPES, TOPIC_KEYWORDS, SHORT_TOPIC_KEYWORDS, KNOWN_FOLDERS
+    OBS_TYPES, TOPIC_KEYWORDS, KNOWN_FOLDERS
 )
 from .models import Session, Observation, Decision, Pending, Pattern
 from . import db
@@ -77,14 +77,7 @@ def detect_topic(text: str) -> str:
     text_lower = text.lower()
     scores: dict[str, int] = {}
     for topic, keywords in TOPIC_KEYWORDS.items():
-        score = 0
-        for kw in keywords:
-            if kw in SHORT_TOPIC_KEYWORDS:
-                if re.search(r"\b" + re.escape(kw) + r"\b", text_lower):
-                    score += 1
-            else:
-                if kw in text_lower:
-                    score += 1
+        score = sum(1 for kw in keywords if kw in text_lower)
         if score > 0:
             scores[topic] = score
     if not scores:
@@ -211,6 +204,9 @@ def capture_session(session_summary: str, session_id: Optional[str] = None,
         link_observation(obs_id, project, obs.summary + " " + obs.detail)
         count += 1
 
+    # Enrich observations with graphify god nodes (if graph exists)
+    _enrich_with_graphify(project, repo_path, observations)
+
     # Detect and record errors, releases, branch activity
     _capture_errors(session_summary, project, session_id)
     _capture_releases(session_summary, project, session_id)
@@ -220,6 +216,40 @@ def capture_session(session_summary: str, session_id: Optional[str] = None,
     db.end_session(session_id, session_summary[:500], count)
 
     return count
+
+
+def _enrich_with_graphify(project: str, repo_path: str,
+                           observations: list) -> None:
+    """Persist graphify god nodes as entities and link to relevant observations."""
+    try:
+        from .graphify import find_graph, get_god_nodes, enrich_observation
+        graph = find_graph(repo_path=repo_path or os.getcwd())
+        if not graph:
+            return
+        god_nodes = get_god_nodes(graph)
+        if not god_nodes:
+            return
+        # Upsert all god nodes as entities (even without a matching observation)
+        with db.db() as conn:
+            for node in god_nodes:
+                label = node["label"]
+                existing = conn.execute(
+                    "SELECT id FROM entities WHERE name=? AND type='god_node'",
+                    (label,)
+                ).fetchone()
+                if not existing:
+                    conn.execute(
+                        "INSERT INTO entities (name, type, project, first_seen, mention_count)"
+                        " VALUES (?,?,?,date('now'),1)",
+                        (label, "god_node", project)
+                    )
+        # Link observations that mention god nodes
+        for obs in observations:
+            if hasattr(obs, "id") and obs.id:
+                enrich_observation(obs.id, project,
+                                   obs.summary + " " + obs.detail, graph)
+    except Exception:
+        pass  # graphify enrichment is best-effort — never break capture
 
 
 # ── Error detection ───────────────────────────────────────────────────────────
@@ -272,19 +302,7 @@ def _capture_errors(text: str, project: str, session_id: str) -> None:
 # ── Release detection ─────────────────────────────────────────────────────────
 
 _RELEASE_SIGNALS = re.compile(
-    r"(?:"
-    r"released?\s+v?"
-    r"|Play\s*Store\s+(?:upload|submitted?|published?)\s+(?:[^\s]+\s+)?v?"
-    r"|uploaded?\s+(?:AAB|APK|bundle)\s+v?"
-    r"|merged?\s+PR[:\s]+.*?v?"
-    r"|bumped?\s+(?:to\s+)?v?"
-    r"|version\s+bump(?:ed)?\s+(?:to\s+)?v?"
-    r"|git\s+tag\s+v?"
-    r"|tagged?\s+v?"
-    r"|TestFlight\s+(?:upload|submitted?|build)\s+v?"
-    r"|App\s*Store\s*Connect\s+(?:upload|submitted?)\s+v?"
-    r"|versionName\s+v?"
-    r")(\d+\.\d+[\.\d]*)",
+    r"(?:released?\s+v?|Play\s*Store\s+(?:upload|submitted?)|merged?\s+PR[:\s]+.*?v?)(\d+\.\d+[\.\d]*)",
     re.IGNORECASE
 )
 
