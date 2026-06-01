@@ -32,8 +32,7 @@ server/
   mcp_server.py  ← stdio JSON-RPC MCP server (7 tools)
   web_viewer.py  ← stdlib http.server web UI (dark mode, port 39000)
 skills/
-  repomem-recall/    ← /recall upgrade
-  repomem-add/       ← quick save during session
+  repomem/           ← /repomem Claude Code skill (all memory operations)
 crons/
   reflect.py     ← nightly 2am: dedup, pattern promotion, contradiction detection
   defrag.py      ← weekly Sunday 3am: merge dupes, archive stale, vacuum
@@ -68,7 +67,7 @@ install.sh       ← one-command setup, auto-detects Python 3.11+, wires everyth
 ## Running tests
 ```bash
 python3.13 -m pytest tests/ -v
-# Expected: 126/126 passing
+# Expected: 146/146 passing
 ```
 
 ## CLI usage
