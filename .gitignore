@@ -46,3 +46,6 @@ credentials.*
 
 # Flow / planning (local only)
 .flow/
+
+# Graphify knowledge graph output (local only)
+graphify-out/
