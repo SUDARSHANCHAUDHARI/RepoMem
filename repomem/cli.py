@@ -3,6 +3,7 @@ RepoMem CLI — command-line interface.
 Usage: python -m repomem <command> [args]
 """
 from __future__ import annotations
+import os
 import sys
 import argparse
 from typing import Optional
