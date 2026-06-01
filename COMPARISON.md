@@ -23,6 +23,7 @@ A detailed breakdown of why RepoMem was built instead of using an existing tool.
 | [LangChain Memory](https://github.com/langchain-ai/langchain) | ~138k | Python | Flexible (pluggable) | Optional | MIT |
 | [LlamaIndex Memory](https://github.com/run-llama/llama_index) | ~50k | Python/TS | Vector store | Optional | MIT |
 | MindStudio / Milvus | — | Python | Milvus + SQLite | **Yes** (Voyage AI) | — |
+| [claude-code-memory-setup](https://github.com/lucasrosati/claude-code-memory-setup) | ~0 | Python + Bash | Obsidian vault (flat files) | No | MIT |
 | **RepoMem** | — | **Python (stdlib only)** | **SQLite + FTS5** | **No** | **MIT** |
 
 *agentmemory keyword search works without API key; semantic search requires an embedding API key.
@@ -100,10 +101,10 @@ A detailed breakdown of why RepoMem was built instead of using an existing tool.
 | Feature | claude-mem | Engram | Basic Memory | mem0 | RepoMem |
 |---------|:---------:|:------:|:------------:|:----:|:-------:|
 | MCP server (mid-session queries) | ✅ 4 tools | ✅ 19 tools | ✅ | ❌ | ✅ 7 tools |
-| CLI | ✅ | ✅ | ✅ | ✅ | ✅ 17 commands |
+| CLI | ✅ | ✅ | ✅ | ✅ | ✅ 20 commands |
 | Web viewer (local, no signup) | ✅ local | ❌ cloud only | ❌ cloud only | ❌ | ✅ local |
 | Terminal UI (vim keys) | ❌ | ✅ | Partial | ❌ | ✅ |
-| Obsidian vault export | ❌ | Beta | ✅ | ❌ | ✅ wikilinks |
+| Obsidian vault export | ❌ | Beta | ✅ | ❌ | ✅ vault-aware wikilinks, dynamic tags, patterns/releases/branches |
 | Git cross-machine sync | ❌ | ✅ | Manual | ❌ | ✅ |
 | Code graph (Graphify) integration | ❌ | ❌ | ❌ | ❌ | ✅ |
 
@@ -121,6 +122,20 @@ A detailed breakdown of why RepoMem was built instead of using an existing tool.
 ---
 
 ## Why not each one
+
+### claude-code-memory-setup
+
+**Good:** Excellent Zettelkasten methodology guide. The vault-aware wikilink strategy (scan real notes, code-block-safe, first-occurrence-only, longest-match-first) is genuinely better than naive PascalCase linking. `SHORT_KEYWORDS` word-boundary fix for topic detection is a real bug catch. The `import-chat` pipeline concept (import historical exported sessions) fills a gap no other tool addresses. RepoMem borrowed all four of these ideas directly.  
+**Problems:**
+
+- Not a system — a guide + one 280-line Python script. No automation, no hooks, no database, no injection
+- Manual `/save` and `/resume` commands required every session — zero automation
+- No database: memory is flat Markdown files, no FTS search, no relational queries
+- Requires external dependencies: `claude-conversation-extractor`, browser extension for Web chats
+- No background reflection, no dedup, no pattern promotion, no conflict detection, no temporal decay
+- No error tracking, no release tracking, no entity linking
+
+**What RepoMem took:** vault-aware wikilink strategy, `SHORT_KEYWORDS` word-boundary matching, `import-chat` concept, dynamic Obsidian frontmatter tags with `type/status/source/processed` fields.
 
 ### claude-mem
 

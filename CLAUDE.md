@@ -5,8 +5,8 @@ RepoMem is a persistent memory system for AI coding agents.
 Pure Python · SQLite + FTS5 · Zero dependencies · Zero API keys · Zero telemetry · MIT license.
 
 ## Status
-- **All 4 phases COMPLETE** — 146/146 tests passing
-- **Current version:** v0.1.1
+- **All 4 phases COMPLETE + 19 improvements** — 186/186 tests passing
+- **Current version:** v0.2.0
 - **Installed and running** at `~/.repomem/`
 - **GitHub:** https://github.com/SUDARSHANCHAUDHARI/RepoMem (public, main branch)
 - **PyPI:** publish workflow wired — tags `v*` auto-publish via trusted publishing
@@ -20,8 +20,10 @@ repomem/
   capture.py     ← extracts observations, entities, errors, releases, branch tracking
   inject.py      ← builds context injection (2000 char cap, 8-section priority order)
   search.py      ← FTS5 + LIKE fallback search
-  cli.py         ← 17 commands: search, add, pending, decisions, status, doctor,
-                    entities, releases, branches, sync, obsidian, graphify, tui, server
+  cli.py         ← 20 commands: search, add, pending, decisions, status, doctor,
+                    entities, releases, branches, merge-branch, sync, obsidian, graphify,
+                    tui, server, resolve-error, import-chat
+  utils.py       ← shared text_similarity() utility (used by reflect + defrag)
   entity.py      ← PascalCase/file/library entity extraction + obs linking
   obsidian.py    ← export to Obsidian vault as wikilinked Markdown
   sync.py        ← cross-machine git sync (export/import JSON chunks)
