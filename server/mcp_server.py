@@ -233,6 +233,8 @@ def handle_repomem_save(args: dict) -> dict:
         created_at=int(time.time()),
     )
     obs_id = save_observation(obs)
+    from repomem.entity import link_observation
+    link_observation(obs_id, project, obs.summary + " " + obs.detail)
     return {"content": [{"type": "text", "text": f"Saved observation #{obs_id}: [{args['type']}] {args['summary'][:80]}"}]}
 
 

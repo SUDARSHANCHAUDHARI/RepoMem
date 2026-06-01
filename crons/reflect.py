@@ -18,12 +18,8 @@ if REPOMEM_INSTALL not in sys.path:
 
 
 def _similarity(a: str, b: str) -> float:
-    """Simple word-overlap similarity (0.0–1.0). No external deps."""
-    wa = set(re.sub(r"[^a-z0-9 ]", "", a.lower()).split())
-    wb = set(re.sub(r"[^a-z0-9 ]", "", b.lower()).split())
-    if not wa or not wb:
-        return 0.0
-    return len(wa & wb) / max(len(wa), len(wb))
+    from repomem.utils import text_similarity
+    return text_similarity(a, b)
 
 
 def step_dedup(conn, cutoff_date: str, stats: dict) -> None:

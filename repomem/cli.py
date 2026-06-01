@@ -279,12 +279,13 @@ def cmd_obsidian(args) -> None:
     from pathlib import Path
 
     vault = Path(args.vault) if args.vault else None
+    no_wikilinks = getattr(args, "no_wikilinks", False)
 
     if args.project:
-        path = export_project(args.project, vault=vault)
+        path = export_project(args.project, vault=vault, no_wikilinks=no_wikilinks)
         print(f"✅ Exported {args.project} → {path}")
     else:
-        paths = export_all(vault=vault)
+        paths = export_all(vault=vault, no_wikilinks=no_wikilinks)
         print(f"✅ Exported {len(paths)} projects to Obsidian")
         for p in paths:
             print(f"   {p}")
@@ -408,6 +409,64 @@ def cmd_doctor(args) -> None:
         print()
 
 
+def cmd_resolve_error(args) -> None:
+    """Mark an error as resolved."""
+    db.init_db()
+    db.resolve_error(args.id)
+    print(f"✅ Resolved error #{args.id}")
+
+
+def cmd_merge_branch(args) -> None:
+    """Mark a branch as merged."""
+    db.init_db()
+    project, _, _ = detect_project()
+    if args.project:
+        project = args.project
+    db.merge_branch(project, args.branch,
+                    pr_number=args.pr_number or None,
+                    pr_url=args.pr_url or "")
+    print(f"✅ Marked branch '{args.branch}' as merged in {project}")
+
+
+def cmd_import_chat(args) -> None:
+    """Import a raw exported Claude session .md file into memory."""
+    import time
+    from pathlib import Path as _Path
+    from .capture import capture_session, detect_project
+
+    db.init_db()
+    chat_file = _Path(args.file)
+    if not chat_file.exists():
+        print(f"Error: file not found: {chat_file}", file=__import__("sys").stderr)
+        return
+
+    text = chat_file.read_text(encoding="utf-8", errors="replace")
+
+    project, _, _ = detect_project()
+    if args.project:
+        project = args.project
+
+    # Unique session id: filename stem + timestamp
+    session_id = f"import-{chat_file.stem}-{int(time.time())}"
+
+    import os as _os
+    orig_project = _os.environ.get("REPOMEM_PROJECT")
+    _os.environ["REPOMEM_PROJECT"] = project
+    try:
+        count = capture_session(session_summary=text, session_id=session_id)
+    finally:
+        if orig_project is None:
+            _os.environ.pop("REPOMEM_PROJECT", None)
+        else:
+            _os.environ["REPOMEM_PROJECT"] = orig_project
+
+    print(f"✅ Imported {count} observation(s) from {chat_file.name} → project '{project}'")
+
+    if args.move:
+        chat_file.unlink()
+        print(f"   Deleted source file: {chat_file}")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         prog="repomem",
@@ -488,6 +547,25 @@ def main() -> None:
     p_obs = sub.add_parser("obsidian", help="Export memory to Obsidian vault")
     p_obs.add_argument("--project", "-p", help="Export single project (default: all)")
     p_obs.add_argument("--vault", help="Override vault path")
+    p_obs.add_argument("--no-wikilinks", action="store_true", dest="no_wikilinks",
+                       help="Disable wikilink insertion in export")
+
+    # resolve-error
+    p_re = sub.add_parser("resolve-error", help="Mark an error as resolved")
+    p_re.add_argument("id", type=int, help="Error ID")
+
+    # merge-branch
+    p_mb = sub.add_parser("merge-branch", help="Mark a branch as merged")
+    p_mb.add_argument("branch", help="Branch name")
+    p_mb.add_argument("--project", "-p")
+    p_mb.add_argument("--pr-number", type=int)
+    p_mb.add_argument("--pr-url", default="")
+
+    # import-chat
+    p_ic = sub.add_parser("import-chat", help="Import a raw Claude session .md export into memory")
+    p_ic.add_argument("file", help="Path to exported .md file")
+    p_ic.add_argument("--project", "-p", help="Override project name (default: auto-detect)")
+    p_ic.add_argument("--move", action="store_true", help="Delete source file after import")
 
     # entities
     p_ent = sub.add_parser("entities", help="List known entities")
@@ -518,6 +596,9 @@ def main() -> None:
         "pending": cmd_pending,
         "add-pending": cmd_add_pending,
         "resolve": cmd_resolve,
+        "resolve-error": cmd_resolve_error,
+        "merge-branch": cmd_merge_branch,
+        "import-chat": cmd_import_chat,
         "decisions": cmd_decisions,
         "add-decision": cmd_add_decision,
         "status": cmd_status,

@@ -56,6 +56,10 @@ KNOWN_FOLDERS = [
 # Maps topic names to keyword lists. An observation is tagged with the topic
 # whose keywords appear most often in the observation text.
 # Customize for your tech stack — add, remove, or rename topics freely.
+# Short topic keywords that must match as whole words to avoid false positives.
+# e.g. "di" would match "audio", "media", "studio" without word-boundary matching.
+SHORT_TOPIC_KEYWORDS: set[str] = {"di", "ui", "sql", "api", "orm", "r8", "ksp"}
+
 TOPIC_KEYWORDS = {
     "database":    ["database", "migration", "schema", "query", "sql", "sqlite",
                     "dao", "entity", "orm", "room", "prisma", "drizzle"],

@@ -9,7 +9,6 @@ Cron: 0 3 * * 0 python3 ~/.repomem/crons/defrag.py >> ~/.repomem/logs/defrag.log
 from __future__ import annotations
 import sys
 import os
-import re
 from datetime import date, timedelta
 
 REPOMEM_INSTALL = os.environ.get("REPOMEM_INSTALL", os.path.expanduser("~/.repomem/lib"))
@@ -18,12 +17,8 @@ if REPOMEM_INSTALL not in sys.path:
 
 
 def _similarity(a: str, b: str) -> float:
-    """Word-overlap Jaccard similarity."""
-    wa = set(re.sub(r"[^a-z0-9 ]", "", a.lower()).split())
-    wb = set(re.sub(r"[^a-z0-9 ]", "", b.lower()).split())
-    if not wa or not wb:
-        return 0.0
-    return len(wa & wb) / max(len(wa), len(wb))
+    from repomem.utils import text_similarity
+    return text_similarity(a, b)
 
 
 def step_merge_duplicates(conn, stats: dict) -> None:

@@ -181,7 +181,19 @@ def build_context(project: Optional[str] = None) -> str:
     except Exception:
         pass
 
-    # 8. Unresolved errors
+    # 8. Top frequently-touched entities
+    try:
+        from .entity import get_entities
+        top_entities = get_entities(project=project, min_mentions=3)[:3]
+        if top_entities:
+            lines = ["║ HOT ENTITIES (frequently touched)\n"]
+            for e in top_entities:
+                lines.append(f"║  🔗 {e['name']} ({e['type']}, {e['mention_count']}×)\n")
+            add_section("".join(lines))
+    except Exception:
+        pass
+
+    # 9. Unresolved errors
     errors = db.get_unresolved_errors(project=project)
     if errors:
         lines = ["║ UNRESOLVED ERRORS\n"]
