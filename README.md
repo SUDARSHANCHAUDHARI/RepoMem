@@ -1,6 +1,6 @@
 # RepoMem
 
-[![Tests](https://github.com/your-username/RepoMem/actions/workflows/tests.yml/badge.svg)](https://github.com/your-username/RepoMem/actions/workflows/tests.yml)
+[![Tests](https://github.com/SUDARSHANCHAUDHARI/RepoMem/actions/workflows/tests.yml/badge.svg)](https://github.com/SUDARSHANCHAUDHARI/RepoMem/actions/workflows/tests.yml)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Zero dependencies](https://img.shields.io/badge/dependencies-zero-brightgreen.svg)](#)
@@ -30,7 +30,7 @@ The result: Claude arrives knowing what broke last time, what decisions were mad
 ## Install
 
 ```bash
-git clone https://github.com/your-username/RepoMem
+git clone https://github.com/SUDARSHANCHAUDHARI/RepoMem
 cd RepoMem && bash install.sh
 ```
 

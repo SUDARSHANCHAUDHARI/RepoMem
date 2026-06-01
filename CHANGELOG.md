@@ -54,5 +54,5 @@ Initial open source release after 4 phases of development.
 
 ---
 
-[Unreleased]: https://github.com/your-username/RepoMem/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/your-username/RepoMem/releases/tag/v0.1.0
+[Unreleased]: https://github.com/SUDARSHANCHAUDHARI/RepoMem/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/SUDARSHANCHAUDHARI/RepoMem/releases/tag/v0.1.0
