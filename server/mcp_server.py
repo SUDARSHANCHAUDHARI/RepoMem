@@ -318,7 +318,7 @@ def handle_request(req: dict) -> None:
         ok(req_id, {
             "protocolVersion": "2024-11-05",
             "capabilities": {"tools": {}},
-            "serverInfo": {"name": "repomem", "version": "0.1.0"},
+            "serverInfo": {"name": "repomem", "version": __import__("repomem").__version__},
         })
 
     elif method == "tools/list":
