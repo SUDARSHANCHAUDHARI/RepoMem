@@ -69,6 +69,32 @@ repomem sync --export                    # export for cross-machine sync
 
 ---
 
+## Claude Code skill — `/repomem`
+
+RepoMem ships a native Claude Code skill at `skills/repomem/`. Once installed, type `/repomem` in any Claude Code session to get a full memory interface without touching the CLI.
+
+**Install the skill:**
+```bash
+mkdir -p ~/.claude/skills/repomem
+cp skills/repomem/SKILL.md ~/.claude/skills/repomem/
+```
+
+**Triggers:**
+
+| You type | What happens |
+|----------|-------------|
+| `/repomem` | Status + recent observations for current project |
+| `"save this to memory"` | Saves current context as an observation |
+| `"what did we fix before?"` | Searches memory for past bugfixes |
+| `"add pending task"` | Adds a task to the pending queue |
+| `"show decisions"` | Lists architectural decisions |
+| `"open web UI"` | Starts `repomem server` → http://localhost:39000 |
+| `"sync memory"` | Runs `repomem sync --export` |
+
+The skill is **Claude Code-only** — it uses Claude Code's `SKILL.md` format. The underlying RepoMem tool is AI-agnostic and works with any agent that can run CLI commands.
+
+---
+
 ## Architecture
 
 ```
@@ -301,7 +327,7 @@ Short summary — see [COMPARISON.md](COMPARISON.md) for 5 detailed comparison t
 ## FAQ
 
 **Does it work with agents other than Claude Code?**  
-Yes. The MCP server works with any MCP-compatible agent (Cursor, Gemini CLI, etc.). Without MCP, use the CLI to add observations manually. See [INSTALL.md](INSTALL.md).
+The core tool is AI-agnostic — any agent that can run bash commands can use the CLI. The MCP server works with any MCP-compatible agent (Cursor, Gemini CLI, etc.). The `/repomem` skill and automatic Stop/SessionStart hooks are **Claude Code-specific**. Without Claude Code, use the CLI to add observations manually. See [INSTALL.md](INSTALL.md).
 
 **Does it slow down session start?**  
 No. The SessionStart hook has a 10-second timeout and injects ≤2000 characters. In practice it runs in under 1 second on a warm DB.
