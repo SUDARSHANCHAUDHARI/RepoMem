@@ -1,6 +1,6 @@
 # RepoMem — Database Schema
 
-SQLite + FTS5 · 15 tables · `~/.repomem/memory.db`
+SQLite + FTS5 · 11 tables · `~/.repomem/memory.db`
 
 ---
 
