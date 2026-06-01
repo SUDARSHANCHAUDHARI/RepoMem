@@ -11,7 +11,7 @@ A detailed breakdown of why RepoMem was built instead of using an existing tool.
 
 | Tool | Stars | Language | Storage | API Key | License |
 |------|------:|----------|---------|:-------:|---------|
-| [claude-mem](https://github.com/thedotmack/claude-mem) | ~80k | TypeScript (compiled .cjs) | SQLite + Chroma | No | MIT |
+| [claude-mem](https://github.com/thedotmack/claude-mem) | ~80k | TypeScript (compiled .cjs) | SQLite + Chroma | No | Apache 2 |
 | [Engram](https://github.com/Gentleman-Programming/engram) | ~4k | Go (pre-compiled binary) | SQLite + FTS5 | No | MIT |
 | [agentmemory](https://github.com/jayzeng/agentmemory) | ~5 | TypeScript (compiled) | Markdown + qmd | No* | MIT |
 | [mem0](https://github.com/mem0ai/mem0) | ~57k | Python | Qdrant vector DB | **Yes** | Apache 2 |
@@ -36,10 +36,10 @@ A detailed breakdown of why RepoMem was built instead of using an existing tool.
 | Install runtime | Node.js | Go or binary | Python | Python | Python 3.11+ |
 | Install dependencies | `npm install` | none (binary) | `pip install uv` | `pip install mem0ai` | **none** |
 | API key required | ❌ | ❌ | ❌ | ✅ OpenAI key | ❌ |
-| Configure MCP | Manual JSON | Manual JSON | ❌ no MCP | ❌ no MCP | Auto via `install.sh` |
-| Hook wiring | Manual | Manual | ❌ | ❌ | Auto via `install.sh` |
+| Configure MCP | Auto | Auto | Auto | ❌ no MCP | Auto via `install.sh` |
+| Hook wiring | Auto | Auto | Auto | ❌ | Auto via `install.sh` |
 | Cron jobs | ❌ | ❌ | ❌ | ❌ | Auto via `install.sh` |
-| One-command setup | ❌ | ❌ | Partial | ❌ | ✅ `bash install.sh` |
+| One-command setup | ✅ `npx claude-mem install` | ✅ `brew install` | ✅ `uv tool install` | ❌ | ✅ `bash install.sh` |
 
 ---
 
@@ -52,8 +52,8 @@ A detailed breakdown of why RepoMem was built instead of using an existing tool.
 | Zero API keys required | ✅ | ✅ | ✅ | ❌ OpenAI | ✅ |
 | Zero telemetry | ❓ unknown | ✅ | ✅ | ❌ opt-out only | ✅ |
 | Zero external dependencies | ❌ npm + Chroma | ❌ Go binary | ❌ several | ❌ vector DB | ✅ |
-| Zero compiled binaries | ❌ | ❌ | ✅ | ✅ | ✅ |
-| Fully auditable (read the source) | ❌ build step | Partial | ✅ | ✅ | ✅ |
+| Zero compiled binaries | ❌ | ❌ Go binary | ✅ | ✅ | ✅ |
+| Fully auditable (read the source) | ❌ build step | ❌ Go binary | ✅ | ✅ | ✅ |
 | Works fully offline / air-gapped | ✅ | ✅ | ✅ | ❌ | ✅ |
 | All data stored locally | ✅ | ✅ | ✅ | ❌ cloud | ✅ |
 | Private content tagging | ❌ | ❌ | ❌ | ❌ | ✅ `<private>` tag |
@@ -62,9 +62,9 @@ A detailed breakdown of why RepoMem was built instead of using an existing tool.
 
 | Feature | claude-mem | Engram | Basic Memory | mem0 | RepoMem |
 |---------|:---------:|:------:|:------------:|:----:|:-------:|
-| Automatic session-end capture (Stop hook) | ✅ | Partial | ❌ manual | ❌ manual | ✅ |
-| Automatic session-start injection | ❌ | ❌ | ❌ | ❌ | ✅ |
-| Structured typed observations | ❌ flat text | ❌ flat text | ❌ Markdown | ❌ flat text | ✅ 8 types |
+| Automatic session-end capture (Stop hook) | ✅ | ✅ | ✅ | ❌ manual | ✅ |
+| Automatic session-start injection | ✅ | ✅ | ✅ | ❌ | ✅ |
+| Structured typed observations | Partial | ✅ typed | ✅ categorical | ❌ flat text | ✅ 8 types |
 | Auto topic tagging | ❌ | ❌ | ❌ | ❌ | ✅ |
 | Entity extraction (classes, files, libs) | ❌ | ❌ | ❌ | ❌ | ✅ |
 | Error / crash auto-detection | ❌ | ❌ | ❌ | ❌ | ✅ |
@@ -87,9 +87,9 @@ A detailed breakdown of why RepoMem was built instead of using an existing tool.
 
 | Feature | claude-mem | Engram | Basic Memory | mem0 | RepoMem |
 |---------|:---------:|:------:|:------------:|:----:|:-------:|
-| Sleep-time reflection (nightly) | ❌ | ❌ | ✅ | ❌ | ✅ |
+| Sleep-time reflection (nightly) | ❌ | ✅ | ❌ | ❌ | ✅ |
 | Duplicate / near-duplicate detection | ❌ | ❌ | ❌ | ✅ | ✅ 80% similarity |
-| Contradiction / conflict detection | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Contradiction / conflict detection | ❌ | Beta | ❌ | ❌ | ✅ |
 | Cross-project pattern promotion | ❌ | ❌ | ❌ | ❌ | ✅ 3+ projects |
 | Temporal decay (confidence over time) | ❌ | ❌ | ❌ | ❌ | ✅ |
 | Decision auto-promotion (seen 2+ times) | ❌ | ❌ | ❌ | ❌ | ✅ |
@@ -99,12 +99,12 @@ A detailed breakdown of why RepoMem was built instead of using an existing tool.
 
 | Feature | claude-mem | Engram | Basic Memory | mem0 | RepoMem |
 |---------|:---------:|:------:|:------------:|:----:|:-------:|
-| MCP server (mid-session queries) | ✅ | ✅ | ❌ | ❌ | ✅ 7 tools |
+| MCP server (mid-session queries) | ✅ 4 tools | ✅ | ✅ | ❌ | ✅ 7 tools |
 | CLI | ✅ | ✅ | ✅ | ✅ | ✅ 17 commands |
-| Web viewer (dark mode, no build) | ❌ | ❌ | ❌ | ❌ | ✅ |
-| Terminal UI (vim keys) | ❌ | ❌ | ❌ | ❌ | ✅ |
-| Obsidian vault export | ❌ | ❌ | ❌ | ❌ | ✅ wikilinks |
-| Git cross-machine sync | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Web viewer (local, dark mode) | ✅ local | Cloud only | ✅ | ❌ | ✅ local |
+| Terminal UI (vim keys) | Partial | ✅ | ✅ | ❌ | ✅ |
+| Obsidian vault export | ❌ | Beta | ✅ | ❌ | ✅ wikilinks |
+| Git cross-machine sync | ❌ | ✅ | Partial | ❌ | ✅ |
 | Code graph (Graphify) integration | ❌ | ❌ | ❌ | ❌ | ✅ |
 
 ### Scale & maintenance
@@ -124,26 +124,27 @@ A detailed breakdown of why RepoMem was built instead of using an existing tool.
 
 ### claude-mem
 
-**Good:** High adoption, MCP server, Stop hook, FTS5 search.  
+**Good:** Massive adoption (~80k stars), MCP server, Stop hook, SessionStart injection, web viewer, one-command install (`npx claude-mem install`).  
 **Problems:**
 
-- TypeScript requires `npm install` and a build step — not auditable without a toolchain
+- TypeScript compiled to `.cjs` — requires Node.js and npm; not auditable without a build toolchain
 - Chroma vector DB is a heavyweight dependency for a developer note-taking problem
-- No SessionStart injection — memory is only accessible when Claude explicitly queries it
-- No background reflection — no dedup, no pattern promotion, no conflict detection
 - npm dependency tree brings in dozens of transitive packages with unknown security posture
+- No background reflection — no dedup, no pattern promotion, no conflict detection
+- License is Apache 2.0 (not MIT) — fewer reuse permissions
+- No per-project filtering — all memories are global
 
 ### Engram
 
-**Good:** SQLite + FTS5 (same as RepoMem), MCP server, Go performance.  
+**Good:** SQLite + FTS5, MCP server, SessionStart injection, sleep-time reflection, conflict detection (beta), TUI, Obsidian sync (beta), git sync, one-command install (`brew install`). Closest competitor to RepoMem.
 **Problems:**
 
-- Requires a compiled Go binary — trust and auditability concern; you're running someone's binary
-- No SessionStart injection — must query memory explicitly
-- No sleep-time reflection — memory accumulates but never gets cleaned or promoted
-- No project-level scoping — all memories are global
-- No web UI, TUI, or Obsidian sync
-- No entity linking, error tracking, or release tracking
+- Requires a compiled Go binary — trust and auditability concern; you're running someone's binary, not readable source
+- Web viewer is cloud-hosted (Engram Cloud) — not a local-only solution
+- No project-level scoping — all memories are global across repos
+- No entity linking, release tracking, or `<private>` content stripping
+- Cross-project pattern promotion not present
+- Conflict detection is beta and requires calling out to Claude Code CLI — not fully autonomous
 
 ### Basic Memory
 
@@ -447,8 +448,8 @@ At query time: **parallel retrieval** from semantic + episodic, merged into cont
 
 | Tool | Stars | Studied | Borrowed | Used |
 |------|------:|---------|---------|------|
-| [claude-mem](https://github.com/thedotmack/claude-mem) | 79k | ✅ Deep | `<private>` tags, progressive disclosure | ❌ compiled binary |
-| [Engram](https://github.com/Gentleman-Programming/engram) | 4k | ✅ Deep | FTS5, conflict detection, topic keys, git sync | ❌ Go binary |
+| [claude-mem](https://github.com/thedotmack/claude-mem) | ~80k | ✅ Deep | `<private>` tags, progressive disclosure, web viewer | ❌ compiled binary, Apache 2 license |
+| [Engram](https://github.com/Gentleman-Programming/engram) | ~4k | ✅ Deep | FTS5, session lifecycle, sleep-time reflection, TUI, git sync | ❌ Go binary (not auditable) |
 | [agentmemory](https://github.com/jayzeng/agentmemory) | 5 | ✅ Deep | Scratchpad, topic files, injection cap, graceful degradation | ❌ no per-project |
 | [mem0](https://github.com/mem0ai/mem0) | 57k | ✅ Deep | Entity linking, temporal reasoning, ADD-only | ❌ API key + telemetry |
 | [Basic Memory](https://github.com/basicmachines-co/basic-memory) | 3k | ✅ Deep | Sleep-time reflection, defrag, archive-never-delete | ❌ AGPL |

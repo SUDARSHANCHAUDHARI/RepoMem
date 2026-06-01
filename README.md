@@ -307,23 +307,24 @@ See [SCHEMA.md](SCHEMA.md) for full column-level documentation.
 
 Short summary — see [COMPARISON.md](COMPARISON.md) for 5 detailed comparison tables:
 
-| | [claude-memory-compiler](https://github.com/coleam00/claude-memory-compiler) | [Engram](https://github.com/bmbnexus/engram) | [Basic Memory](https://github.com/basicmachines-co/basic-memory) | [mem0](https://github.com/mem0ai/mem0) | **RepoMem** |
+| | [claude-mem](https://github.com/thedotmack/claude-mem) | [Engram](https://github.com/Gentleman-Programming/engram) | [Basic Memory](https://github.com/basicmachines-co/basic-memory) | [mem0](https://github.com/mem0ai/mem0) | **RepoMem** |
 |---|:---:|:---:|:---:|:---:|:---:|
-| Zero dependencies | ✅ | ❌ | ❌ | ❌ | ✅ |
+| Zero dependencies | ❌ npm | ❌ Go binary | ❌ | ❌ | ✅ stdlib only |
 | Zero API keys | ✅ | ✅ | ✅ | ❌ | ✅ |
-| One-command install | ❌ | ✅ | ✅ | ❌ | ✅ |
-| SessionStart auto-injection | ✅ | Partial | ✅ | ❌ | ✅ |
-| Structured typed observations | ❌ | ❌ | ✅ | ❌ | ✅ |
-| Sleep-time reflection | ❌ | ❌ | ❌ | ❌ | ✅ |
-| Conflict detection | ❌ | ❌ | Partial | ❌ | ✅ |
-| Error tracking | ❌ | ❌ | ❌ | ❌ | ✅ |
-| MCP server | ❌ | ✅ | ✅ | ❌ | ✅ |
-| Web viewer | ❌ | ❌ | ✅ | ❌ | ✅ |
-| Terminal UI | ❌ | ❌ | ✅ | ❌ | ✅ |
-| Obsidian sync | ❌ | ❌ | ✅ | ❌ | ✅ |
-| Git cross-machine sync | ❌ | ❌ | Partial | ❌ | ✅ |
-| DB schema migrations | ❌ | ❌ | ✅ | ❌ | ✅ |
-| License | MIT | MIT | **AGPL** | Apache 2 | **MIT** |
+| One-command install | ✅ | ✅ | ✅ | ❌ | ✅ |
+| SessionStart auto-injection | ✅ | ✅ | ✅ | ❌ | ✅ |
+| Structured typed observations | Partial | ✅ | ✅ | ❌ | ✅ 8 types |
+| Sleep-time reflection | ❌ | ✅ | ❌ | ❌ | ✅ |
+| Conflict detection | ❌ | Beta | ❌ | ❌ | ✅ |
+| Error tracking | ❌ | ✅ | ❌ | ❌ | ✅ |
+| MCP server | ✅ | ✅ | ✅ | ❌ | ✅ |
+| Web viewer (local) | ✅ | Cloud only | ✅ | ❌ | ✅ local |
+| Terminal UI | Partial | ✅ | ✅ | ❌ | ✅ |
+| Obsidian sync | ❌ | Beta | ✅ | ❌ | ✅ |
+| Git cross-machine sync | ❌ | ✅ | Partial | ❌ | ✅ |
+| DB schema migrations | ❌ | ✅ | ✅ | ❌ | ✅ |
+| Fully auditable (no binary) | ❌ | ❌ Go binary | ✅ | ✅ | ✅ |
+| License | Apache 2 | MIT | **AGPL** | Apache 2 | **MIT** |
 
 ---
 
