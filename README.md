@@ -114,7 +114,7 @@ The skill is **Claude Code-only** — it uses Claude Code's `SKILL.md` format. T
                ▼                               ▼
         ┌──────────────────────────────────────────────┐
         │           ~/.repomem/memory.db               │
-        │  SQLite + FTS5 · 15 tables · local only      │
+        │  SQLite + FTS5 · 11 tables · local only      │
         └──────┬───────────────────────────────────────┘
                │
     ┌──────────┼──────────────┐
@@ -258,7 +258,7 @@ repomem tui
 
 ## Schema
 
-15 tables across 4 phases of development:
+11 tables across 4 phases of development (plus 1 FTS5 virtual table with 4 internal shadow tables managed by SQLite):
 
 | Table | Phase | Key columns |
 |-------|-------|-------------|
