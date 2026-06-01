@@ -33,17 +33,35 @@ log = logging.getLogger("repomem.mcp")
 # ── Protocol I/O ──────────────────────────────────────────────────────────────
 
 def read_message() -> dict | None:
-    """Read one Content-Length framed JSON-RPC message from stdin."""
+    """Read one JSON-RPC message from stdin.
+
+    Supports two transports:
+    - Content-Length framed (LSP-style, older MCP)
+    - Newline-delimited JSON (newer MCP stdio transport)
+    """
     try:
-        header = ""
+        first_line = sys.stdin.buffer.readline()
+        if not first_line:
+            return None  # EOF
+
+        decoded = first_line.decode("utf-8").strip()
+
+        # Newline-delimited JSON: first line IS the JSON object
+        if decoded.startswith("{"):
+            global _transport
+            _transport = "ndjson"
+            return json.loads(decoded)
+
+        # Content-Length framing: first line is a header
+        header = decoded
         while True:
             line = sys.stdin.buffer.readline()
             if not line:
-                return None  # EOF
-            decoded = line.decode("utf-8")
-            if decoded == "\r\n" or decoded == "\n":
+                return None
+            part = line.decode("utf-8")
+            if part == "\r\n" or part == "\n":
                 break
-            header += decoded
+            header += part
 
         content_length = 0
         for part in header.strip().split("\r\n"):
@@ -60,11 +78,17 @@ def read_message() -> dict | None:
         return None
 
 
+_transport: str = "ndjson"  # detected on first message: "ndjson" or "content-length"
+
+
 def write_message(msg: dict) -> None:
-    """Write one Content-Length framed JSON-RPC message to stdout."""
+    """Write one JSON-RPC message to stdout, matching the detected transport."""
     body = json.dumps(msg).encode("utf-8")
-    header = f"Content-Length: {len(body)}\r\n\r\n".encode("utf-8")
-    sys.stdout.buffer.write(header + body)
+    if _transport == "content-length":
+        header = f"Content-Length: {len(body)}\r\n\r\n".encode("utf-8")
+        sys.stdout.buffer.write(header + body)
+    else:
+        sys.stdout.buffer.write(body + b"\n")
     sys.stdout.buffer.flush()
 
 
@@ -233,8 +257,6 @@ def handle_repomem_save(args: dict) -> dict:
         created_at=int(time.time()),
     )
     obs_id = save_observation(obs)
-    from repomem.entity import link_observation
-    link_observation(obs_id, project, obs.summary + " " + obs.detail)
     return {"content": [{"type": "text", "text": f"Saved observation #{obs_id}: [{args['type']}] {args['summary'][:80]}"}]}
 
 
@@ -312,15 +334,20 @@ def handle_request(req: dict) -> None:
 
     log.debug(f"→ {method} id={req_id}")
 
-    # Notifications (no id) — acknowledge and return
+    # Notifications (no id) — log and return silently
     if req_id is None:
+        log.debug(f"notification: {method}")
         return
 
     if method == "initialize":
+        # Echo back the client's requested protocol version if we support it
+        client_version = params.get("protocolVersion", "2024-11-05")
+        supported = {"2024-11-05", "2025-03-26"}
+        proto = client_version if client_version in supported else "2024-11-05"
         ok(req_id, {
-            "protocolVersion": "2024-11-05",
+            "protocolVersion": proto,
             "capabilities": {"tools": {}},
-            "serverInfo": {"name": "repomem", "version": __import__("repomem").__version__},
+            "serverInfo": {"name": "repomem", "version": "0.1.0"},
         })
 
     elif method == "tools/list":
