@@ -88,14 +88,22 @@ else
 fi
 
 # ── Install Claude Code skills ─────────────────────────────────────────────────
-if [ -d "$CLAUDE_DIR/skills" ]; then
-    echo "Installing skills..."
-    mkdir -p "$CLAUDE_DIR/skills/repomem"
-    cp "$SCRIPT_DIR/skills/repomem/SKILL.md" "$CLAUDE_DIR/skills/repomem/SKILL.md"
-    echo -e "  ${GREEN}✅ /repomem skill installed${NC}"
-else
-    echo -e "  ${YELLOW}⚠️  Claude skills dir not found — skills not installed${NC}"
+echo "Installing skills..."
+if [ ! -d "$CLAUDE_DIR/skills" ]; then
+    mkdir -p "$CLAUDE_DIR/skills"
+    echo -e "  ${GREEN}✅ Created $CLAUDE_DIR/skills/${NC}"
 fi
+# Remove old sub-skills if present
+for old_skill in repomem-add repomem-recall; do
+    if [ -d "$CLAUDE_DIR/skills/$old_skill" ]; then
+        rm -f "$CLAUDE_DIR/skills/$old_skill/SKILL.md"
+        rmdir "$CLAUDE_DIR/skills/$old_skill" 2>/dev/null || true
+        echo -e "  ${GREEN}✅ Removed old skill: $old_skill${NC}"
+    fi
+done
+mkdir -p "$CLAUDE_DIR/skills/repomem"
+cp "$SCRIPT_DIR/skills/repomem/SKILL.md" "$CLAUDE_DIR/skills/repomem/SKILL.md"
+echo -e "  ${GREEN}✅ /repomem skill installed${NC}"
 
 # ── Wire settings.json ─────────────────────────────────────────────────────────
 SETTINGS="$CLAUDE_DIR/settings.json"

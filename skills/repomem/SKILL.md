@@ -1,10 +1,6 @@
 ---
 name: repomem
-description: >
-  Full RepoMem interface — search memory, save observations, manage tasks,
-  show decisions, sync, health check, and launch the web UI.
-  Use for any memory-related request: "save this", "did we fix this before?",
-  "what's pending?", "add a decision", "show memory", "open web UI", "sync memory".
+description: RepoMem memory interface — save, search, pending tasks, decisions, sync, web UI. Triggers on "save this", "did we fix this before?", "what's pending?", "show memory", "sync memory".
 tools: Bash
 ---
 
