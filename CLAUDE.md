@@ -5,7 +5,7 @@ RepoMem is a persistent memory system for AI coding agents.
 Pure Python · SQLite + FTS5 · Zero dependencies · Zero API keys · Zero telemetry · MIT license.
 
 ## Status
-- **All 4 phases COMPLETE** — 126/126 tests passing
+- **All 4 phases COMPLETE** — 135/135 tests passing
 - **Installed and running** at `~/.repomem/`
 - **GitHub:** https://github.com/SUDARSHANCHAUDHARI/RepoMem (public, main branch)
 
@@ -40,7 +40,7 @@ crons/
 install.sh       ← one-command setup, auto-detects Python 3.11+, wires everything
 ```
 
-## Database schema (15 tables, schema v3)
+## Database schema (11 tables + FTS5 virtual table, schema v3)
 - `sessions` — one row per Claude Code session
 - `observations` — all captured facts (FTS5 indexed), with conflict_id
 - `observations_fts` — FTS5 virtual table

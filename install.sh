@@ -187,7 +187,7 @@ from repomem.db import init_db, get_stats
 init_db()
 s = get_stats()
 print(f'  ✅ DB healthy — {s[\"observations\"]} obs, {s[\"sessions\"]} sessions, {s[\"db_size_kb\"]} KB')
-"
+" || echo -e "  ${YELLOW}⚠️  Health check failed — run 'repomem doctor' after install to diagnose${NC}"
 
 # ── Done ───────────────────────────────────────────────────────────────────────
 echo ""
