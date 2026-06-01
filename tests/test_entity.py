@@ -20,11 +20,11 @@ from repomem.entity import extract_entities, link_observation, get_entities, get
 
 
 def test_extract_pascal_class():
-    entities = extract_entities("Fixed crash in HomeViewModel when state is null")
+    entities = extract_entities("Fixed crash in UserRepository when state is null")
     names = [e[0] for e in entities]
-    assert "HomeViewModel" in names
+    assert "UserRepository" in names
     types = {e[0]: e[1] for e in entities}
-    assert types["HomeViewModel"] == "class"
+    assert types["UserRepository"] == "class"
 
 
 def test_extract_known_library():
@@ -58,7 +58,7 @@ def test_link_observation_creates_entity():
         session_id=session.id,
         project="TestApp",
         type="bugfix",
-        summary="Fixed crash in HomeViewModel when DreamWeave state null",
+        summary="Fixed crash in UserRepository when MyApp state null",
         created_at=int(time.time()),
     )
     obs_id = db.save_observation(obs)
@@ -67,7 +67,7 @@ def test_link_observation_creates_entity():
 
     entities = get_entities(project="TestApp")
     names = [e["name"] for e in entities]
-    assert "HomeViewModel" in names or "DreamWeave" in names
+    assert "UserRepository" in names or "MyApp" in names
 
 
 def test_get_observations_for_entity():
@@ -82,15 +82,15 @@ def test_get_observations_for_entity():
         session_id=session.id,
         project="TestApp",
         type="warning",
-        summary="SpendWise ViewModel leaks memory on rotation",
+        summary="PaymentService ViewModel leaks memory on rotation",
         created_at=int(time.time()),
     )
     obs_id = db.save_observation(obs)
     link_observation(obs_id, "TestApp", obs.summary)
 
-    results = get_observations_for_entity("SpendWise")
+    results = get_observations_for_entity("PaymentService")
     assert len(results) >= 1
-    assert any("SpendWise" in r["summary"] for r in results)
+    assert any("PaymentService" in r["summary"] for r in results)
 
 
 def test_mention_count_increments():
@@ -106,13 +106,13 @@ def test_mention_count_increments():
             session_id=session.id,
             project="TestApp",
             type="learning",
-            summary="RainLock handles edge case in permission flow",
+            summary="UtilLib handles edge case in permission flow",
             created_at=int(time.time()),
         )
         obs_id = db.save_observation(obs)
         link_observation(obs_id, "TestApp", obs.summary)
 
     entities = get_entities()
-    rainlock = next((e for e in entities if e["name"] == "RainLock"), None)
+    rainlock = next((e for e in entities if e["name"] == "UtilLib"), None)
     assert rainlock is not None
     assert rainlock["mention_count"] == 3

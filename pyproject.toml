@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "Persistent memory for AI coding agents — SQLite + FTS5, zero dependencies"
 readme = "README.md"
 license = { text = "MIT" }
-authors = [{ name = "SudarshanTechLabs", email = "sunny.sudarshan@gmail.com" }]
+authors = [{ name = "RepoMem Contributors" }]
 keywords = ["claude", "ai", "memory", "persistent", "sqlite", "developer-tools"]
 classifiers = [
     "Development Status :: 3 - Alpha",

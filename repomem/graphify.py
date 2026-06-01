@@ -8,7 +8,7 @@ Provides:
 - Session-start warnings for high-blast-radius files touched in session
 
 Usage:
-  repomem graphify --project DreamWeave
+  repomem graphify --project my-app
   repomem graphify --scan   (scan current repo)
 """
 from __future__ import annotations

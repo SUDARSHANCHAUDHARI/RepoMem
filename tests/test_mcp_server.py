@@ -98,7 +98,7 @@ def test_save_and_search():
         "jsonrpc": "2.0", "id": 3, "method": "tools/call",
         "params": {"name": "repomem_save", "arguments": {
             "type": "bugfix",
-            "summary": "Fixed crash in HomeViewModel when state is null",
+            "summary": "Fixed crash in UserRepository when state is null",
             "project": "TestApp",
         }}
     })
@@ -108,12 +108,12 @@ def test_save_and_search():
     server.handle_request({
         "jsonrpc": "2.0", "id": 4, "method": "tools/call",
         "params": {"name": "repomem_search", "arguments": {
-            "query": "HomeViewModel",
+            "query": "UserRepository",
             "project": "TestApp",
         }}
     })
     text = responses[1]["content"][0]["text"]
-    assert "HomeViewModel" in text
+    assert "UserRepository" in text
 
 
 def test_add_and_list_pending():

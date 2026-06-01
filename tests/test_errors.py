@@ -22,7 +22,7 @@ from repomem.capture import _capture_errors
 
 
 def test_save_error_basic():
-    eid = save_error("TestApp", "NullPointerException in HomeViewModel")
+    eid = save_error("TestApp", "NullPointerException in UserRepository")
     assert eid > 0
     errors = get_unresolved_errors(project="TestApp")
     assert len(errors) == 1
@@ -30,8 +30,8 @@ def test_save_error_basic():
 
 
 def test_same_error_increments_recurred():
-    save_error("TestApp", "NullPointerException in HomeViewModel")
-    save_error("TestApp", "NullPointerException in HomeViewModel")
+    save_error("TestApp", "NullPointerException in UserRepository")
+    save_error("TestApp", "NullPointerException in UserRepository")
     errors = get_unresolved_errors(project="TestApp")
     assert len(errors) == 1
     assert errors[0]["recurred"] == 1

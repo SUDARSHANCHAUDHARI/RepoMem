@@ -21,20 +21,20 @@ def seed_db():
     from repomem.db import save_session, save_observation, save_decision, save_pending
     from repomem.models import Session, Observation, Decision, Pending
 
-    s = Session(project="DreamWeave", repo_path="/tmp")
+    s = Session(project="MyApp", repo_path="/tmp")
     save_session(s)
     save_observation(Observation(
-        session_id=s.id, project="DreamWeave", type="bugfix",
-        summary="Fixed crash in HomeViewModel on rotation",
+        session_id=s.id, project="MyApp", type="bugfix",
+        summary="Fixed crash in UserRepository on rotation",
         topic="viewmodel", created_at=int(time.time()),
     ))
     save_observation(Observation(
-        session_id=s.id, project="DreamWeave", type="warning",
+        session_id=s.id, project="MyApp", type="warning",
         summary="Never use force unwrap in production",
         topic="kotlin", created_at=int(time.time()),
     ))
     save_decision(Decision(scope="ALL", topic="di", decision="Use Hilt for DI"))
-    save_pending(Pending(project="DreamWeave", task="Add Room migration tests", priority="P1"))
+    save_pending(Pending(project="MyApp", task="Add Room migration tests", priority="P1"))
     return s
 
 
@@ -58,7 +58,7 @@ def test_dashboard_renders(tmp_path, monkeypatch):
     viewer = get_viewer()
     html = viewer.page_dashboard()
     assert "RepoMem" in html
-    assert "DreamWeave" in html
+    assert "MyApp" in html
     assert "Observations" in html
 
 
@@ -73,16 +73,16 @@ def test_observations_page():
     seed_db()
     viewer = get_viewer()
     html = viewer.page_observations()
-    assert "HomeViewModel" in html
+    assert "UserRepository" in html
     assert "bugfix" in html
 
 
 def test_observations_project_filter():
     seed_db()
     viewer = get_viewer()
-    html = viewer.page_observations(project="DreamWeave")
-    assert "DreamWeave" in html
-    assert "HomeViewModel" in html
+    html = viewer.page_observations(project="MyApp")
+    assert "MyApp" in html
+    assert "UserRepository" in html
 
 
 def test_decisions_page():
@@ -112,14 +112,14 @@ def test_projects_page():
     seed_db()
     viewer = get_viewer()
     html = viewer.page_projects()
-    assert "DreamWeave" in html
+    assert "MyApp" in html
 
 
 def test_search_page():
     seed_db()
     viewer = get_viewer()
-    html = viewer.page_observations(query="HomeViewModel")
-    assert "HomeViewModel" in html
+    html = viewer.page_observations(query="UserRepository")
+    assert "UserRepository" in html
 
 
 def test_page_has_nav_links():

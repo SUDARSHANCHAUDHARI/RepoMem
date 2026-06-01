@@ -35,7 +35,7 @@ def test_init_db_creates_tables():
 
 
 def test_save_and_get_session():
-    s = Session(project="TestApp", repo_path="/tmp/TestApp", folder="AndroidApps")
+    s = Session(project="TestApp", repo_path="/tmp/TestApp", folder="apps")
     sid = db.save_session(s)
     assert sid == s.id
     result = db.get_session(sid)
@@ -44,39 +44,39 @@ def test_save_and_get_session():
 
 def test_save_and_search_observation():
     import time
-    s = Session(project="DreamWeave", repo_path="/tmp/DreamWeave")
+    s = Session(project="MyApp", repo_path="/tmp/MyApp")
     db.save_session(s)
 
     obs = Observation(
         session_id=s.id,
-        project="DreamWeave",
+        project="MyApp",
         type="bugfix",
         topic="viewmodel",
-        summary="Fixed null pointer in HomeViewModel",
+        summary="Fixed null pointer in UserRepository",
         created_at=int(time.time()),
     )
     obs_id = db.save_observation(obs)
     assert obs_id > 0
 
-    results = db.search_observations("HomeViewModel", project="DreamWeave")
+    results = db.search_observations("UserRepository", project="MyApp")
     assert len(results) > 0
-    assert results[0].summary == "Fixed null pointer in HomeViewModel"
+    assert results[0].summary == "Fixed null pointer in UserRepository"
 
 
 def test_get_observations_filters():
     import time
-    s = Session(project="HydraTrack", repo_path="/tmp/HydraTrack")
+    s = Session(project="TestProject", repo_path="/tmp/TestProject")
     db.save_session(s)
 
     for obs_type in ["bugfix", "decision", "upgrade"]:
         obs = Observation(
-            session_id=s.id, project="HydraTrack",
+            session_id=s.id, project="TestProject",
             type=obs_type, summary=f"Test {obs_type}",
             created_at=int(time.time()),
         )
         db.save_observation(obs)
 
-    bugfixes = db.get_observations("HydraTrack", obs_type="bugfix")
+    bugfixes = db.get_observations("TestProject", obs_type="bugfix")
     assert all(o["type"] == "bugfix" for o in bugfixes)
 
 
@@ -90,15 +90,15 @@ def test_save_and_get_decision():
 
 
 def test_save_and_resolve_pending():
-    p = Pending(project="DreamWeave", task="Add dark mode", priority="P1")
+    p = Pending(project="MyApp", task="Add dark mode", priority="P1")
     pid = db.save_pending(p)
     assert pid > 0
 
-    items = db.get_pending(project="DreamWeave")
+    items = db.get_pending(project="MyApp")
     assert any(i["task"] == "Add dark mode" for i in items)
 
     db.resolve_pending(pid)
-    items_after = db.get_pending(project="DreamWeave")
+    items_after = db.get_pending(project="MyApp")
     assert not any(i["task"] == "Add dark mode" for i in items_after)
 
 

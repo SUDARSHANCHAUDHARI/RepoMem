@@ -18,7 +18,7 @@ def temp_db(tmp_path, monkeypatch):
     yield
 
 
-def make_project(name="DreamWeave"):
+def make_project(name="MyApp"):
     from repomem.db import save_session, save_observation, save_decision, save_pending
     from repomem.models import Session, Observation, Decision, Pending
 
@@ -27,7 +27,7 @@ def make_project(name="DreamWeave"):
 
     save_observation(Observation(
         session_id=s.id, project=name, type="bugfix",
-        summary=f"Fixed crash in HomeViewModel on rotation",
+        summary=f"Fixed crash in UserRepository on rotation",
         topic="viewmodel", created_at=int(time.time()),
     ))
     save_observation(Observation(
@@ -44,9 +44,9 @@ from repomem.obsidian import export_project, export_all, _add_wikilinks, _render
 
 
 def test_add_wikilinks_wraps_pascal():
-    result = _add_wikilinks("Fixed crash in HomeViewModel and SpendWise")
-    assert "[[HomeViewModel]]" in result
-    assert "[[SpendWise]]" in result
+    result = _add_wikilinks("Fixed crash in UserRepository and PaymentService")
+    assert "[[UserRepository]]" in result
+    assert "[[PaymentService]]" in result
 
 
 def test_add_wikilinks_leaves_normal_words():
@@ -55,39 +55,39 @@ def test_add_wikilinks_leaves_normal_words():
 
 
 def test_render_project_contains_sections():
-    make_project("DreamWeave")
-    content = _render_project("DreamWeave")
-    assert "# DreamWeave" in content
+    make_project("MyApp")
+    content = _render_project("MyApp")
+    assert "# MyApp" in content
     assert "## ⚡ Decisions" in content
     assert "Use Hilt for injection" in content
     assert "## 📋 Pending" in content
     assert "Add unit tests for ViewModel" in content
     assert "## 📝 Observations" in content
-    assert "HomeViewModel" in content
+    assert "UserRepository" in content
 
 
 def test_render_project_has_frontmatter():
-    make_project("DreamWeave")
-    content = _render_project("DreamWeave")
+    make_project("MyApp")
+    content = _render_project("MyApp")
     assert content.startswith("---")
-    assert "project: DreamWeave" in content
+    assert "project: MyApp" in content
     assert "tags: [repomem, project-memory]" in content
 
 
 def test_render_project_has_wikilinks():
-    make_project("DreamWeave")
-    content = _render_project("DreamWeave")
-    assert "[[HomeViewModel]]" in content
+    make_project("MyApp")
+    content = _render_project("MyApp")
+    assert "[[UserRepository]]" in content
 
 
 def test_export_project_writes_file(tmp_path):
-    make_project("RainLock")
+    make_project("UtilLib")
     vault = tmp_path / "obsidian"
-    path = export_project("RainLock", vault=vault)
+    path = export_project("UtilLib", vault=vault)
     assert path.exists()
-    assert path.name == "RainLock.md"
+    assert path.name == "UtilLib.md"
     text = path.read_text()
-    assert "# RainLock" in text
+    assert "# UtilLib" in text
 
 
 def test_export_all_writes_multiple(tmp_path):
