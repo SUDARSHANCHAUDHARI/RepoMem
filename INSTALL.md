@@ -128,7 +128,7 @@ repomem add-pending "Add unit tests for ViewModel" --project MyApp --priority P1
 | `REPOMEM_DIR` | `~/.repomem` | Override storage location |
 | `REPOMEM_INSTALL` | `~/.repomem/lib` | Override package location (hooks) |
 | `REPOMEM_PROJECT` | (auto) | Override project detection |
-| `REPOMEM_OBSIDIAN_VAULT` | `~/…/SudarshanObsidian/RepoMem` | Override Obsidian vault path |
+| `REPOMEM_OBSIDIAN_VAULT` | `~/obsidian-vault/RepoMem` | Override Obsidian vault path |
 | `REPOMEM_PORT` | `39000` | Web viewer port |
 
 ---
