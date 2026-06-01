@@ -6,8 +6,10 @@ Pure Python · SQLite + FTS5 · Zero dependencies · Zero API keys · Zero telem
 
 ## Status
 - **All 4 phases COMPLETE** — 146/146 tests passing
+- **Current version:** v0.1.1
 - **Installed and running** at `~/.repomem/`
 - **GitHub:** https://github.com/SUDARSHANCHAUDHARI/RepoMem (public, main branch)
+- **PyPI:** publish workflow wired — tags `v*` auto-publish via trusted publishing
 
 ## Architecture
 ```
@@ -86,6 +88,8 @@ Phase 1 ✅  Core: capture, inject, search, CLI, hooks, install
 Phase 2 ✅  MCP server + entity linking + reflection + error tracking + temporal reasoning
 Phase 3 ✅  Defrag + conflict detection + Obsidian sync + doctor + release/branch tracking + git sync
 Phase 4 ✅  Graphify + web viewer + TUI + polish install + full docs
+Post-release ✅  /repomem Claude Code skill + CI matrix + PyPI publish workflow +
+                 comparison tables verified (11 repos) + 146 tests + ship-check clean
 ```
 
 ## Notes for Claude
@@ -96,4 +100,7 @@ Phase 4 ✅  Graphify + web viewer + TUI + polish install + full docs
 - Never bypass hooks with --no-verify or core.hooksPath=/dev/null — fix the hook instead
 - If a hook blocks something, STOP and ask — never self-resolve
 - install.sh is idempotent — safe to re-run after updates
-- graphify-out/graph.json exists — use `graphify query` for codebase questions
+- graphify-out/ is gitignored — use `graphify query` for codebase questions
+- Version must stay in sync: `pyproject.toml` version == `repomem/__init__.py __version__` — CI enforces this
+- To release: bump both version files, update CHANGELOG, tag `vX.Y.Z`, push tag → PyPI auto-publishes
+- Table count is 11 user tables + 1 FTS5 virtual table (not 15 — shadow tables are SQLite internals)
