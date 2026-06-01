@@ -58,7 +58,7 @@ def test_status_project_filter():
 
 def test_add_observation_no_fk_error():
     output = run_cli("add", "--type", "bugfix",
-                     "--summary", "Fixed crash in HomeViewModel",
+                     "--summary", "Fixed crash in UserRepository",
                      "--project", "TestApp")
     assert "Saved observation" in output
     assert "bugfix" in output
@@ -135,10 +135,10 @@ def test_decisions_lists():
 
 def test_search_returns_results():
     run_cli("add", "--type", "bugfix",
-            "--summary", "Fixed crash in HomeViewModel rotation",
+            "--summary", "Fixed null pointer in UserRepository",
             "--project", "TestApp")
-    output = run_cli("search", "HomeViewModel")
-    assert "HomeViewModel" in output
+    output = run_cli("search", "UserRepository")
+    assert "UserRepository" in output
 
 
 def test_search_empty_returns_no_results():
@@ -163,8 +163,8 @@ def test_entities_empty():
 
 def test_entities_lists_after_add():
     run_cli("add", "--type", "bugfix",
-            "--summary", "Fixed crash in HomeViewModel when rotating",
+            "--summary", "Fixed crash in UserRepository when rotating",
             "--project", "TestApp")
     output = run_cli("entities")
     # Entity extraction may or may not link (depends on FK of manual session)
-    assert "entities" in output.lower() or "HomeViewModel" in output
+    assert "entities" in output.lower() or "UserRepository" in output

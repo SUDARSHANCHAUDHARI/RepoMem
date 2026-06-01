@@ -25,16 +25,16 @@ def make_fake_graph(tmp_path: Path, god_node_edges: int = 15) -> Path:
     graph_dir.mkdir()
     graph = {
         "nodes": [
-            {"id": "HomeViewModel.kt", "label": "HomeViewModel", "type": "class", "community": "1"},
-            {"id": "SpendWiseRepository.kt", "label": "SpendWiseRepository", "type": "class", "community": "1"},
-            {"id": "MainActivity.kt", "label": "MainActivity", "type": "class", "community": "2"},
+            {"id": "UserRepository.kt", "label": "UserRepository", "type": "class", "community": "1"},
+            {"id": "PaymentService.kt", "label": "PaymentServiceRepository", "type": "class", "community": "1"},
+            {"id": "AppController.kt", "label": "MainActivity", "type": "class", "community": "2"},
             {"id": "build.gradle.kts", "label": "build.gradle.kts", "type": "file", "community": "3"},
         ],
         "edges": [
-            # Make HomeViewModel a god node with many edges
-            *[{"source": "HomeViewModel.kt", "target": f"dep_{i}.kt"} for i in range(god_node_edges)],
-            {"source": "MainActivity.kt", "target": "HomeViewModel.kt"},
-            {"source": "SpendWiseRepository.kt", "target": "HomeViewModel.kt"},
+            # Make UserRepository a god node with many edges
+            *[{"source": "UserRepository.kt", "target": f"dep_{i}.kt"} for i in range(god_node_edges)],
+            {"source": "AppController.kt", "target": "UserRepository.kt"},
+            {"source": "PaymentService.kt", "target": "UserRepository.kt"},
         ]
     }
     graph_path = graph_dir / "graph.json"
@@ -66,7 +66,7 @@ def test_get_god_nodes_identifies_high_edge_nodes(tmp_path):
     graph = load_graph(repo_path=str(tmp_path))
     god_nodes = get_god_nodes(graph, threshold=10)
     assert len(god_nodes) >= 1
-    assert god_nodes[0]["label"] == "HomeViewModel"
+    assert god_nodes[0]["label"] == "UserRepository"
     assert god_nodes[0]["edge_count"] >= 15
 
 
@@ -83,7 +83,7 @@ def test_get_communities_groups_nodes(tmp_path):
     graph = load_graph(repo_path=str(tmp_path))
     communities = get_communities(graph)
     assert len(communities) >= 2
-    assert any("HomeViewModel.kt" in v for v in communities.values())
+    assert any("UserRepository.kt" in v for v in communities.values())
 
 
 def test_enrich_observation_tags_god_node(tmp_path):
@@ -97,13 +97,13 @@ def test_enrich_observation_tags_god_node(tmp_path):
     save_session(s)
     obs = Observation(
         session_id=s.id, project="TestApp", type="bugfix",
-        summary="Fixed crash in HomeViewModel when rotating",
+        summary="Fixed crash in UserRepository when rotating",
         created_at=int(time.time()),
     )
     obs_id = save_observation(obs)
 
     found = enrich_observation(obs_id, "TestApp", obs.summary, graph)
-    assert "HomeViewModel" in found
+    assert "UserRepository" in found
 
 
 def test_build_graph_context_returns_god_nodes(tmp_path, monkeypatch):
@@ -111,7 +111,7 @@ def test_build_graph_context_returns_god_nodes(tmp_path, monkeypatch):
     make_fake_graph(tmp_path, god_node_edges=15)
     ctx = build_graph_context("TestApp", repo_path=str(tmp_path))
     assert "GOD NODES" in ctx
-    assert "HomeViewModel" in ctx
+    assert "UserRepository" in ctx
 
 
 def test_build_graph_context_empty_when_no_graph(tmp_path):

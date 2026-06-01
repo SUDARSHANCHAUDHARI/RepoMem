@@ -60,8 +60,8 @@ def get_defrag():
 def test_defrag_merges_duplicates():
     from repomem.db import get_connection
     s = make_session()
-    make_obs(s.id, summary="Fixed crash in HomeViewModel when state is null on rotation")
-    make_obs(s.id, summary="Fixed crash in HomeViewModel when state is null after rotation")
+    make_obs(s.id, summary="Fixed crash in UserRepository when state is null on rotation")
+    make_obs(s.id, summary="Fixed crash in UserRepository when state is null after rotation")
 
     mod = get_defrag()
     conn = get_connection()

@@ -58,8 +58,8 @@ def get_reflect_steps():
 def test_dedup_marks_similar_stale():
     from repomem.db import get_connection
     s = make_session()
-    make_obs(s.id, summary="Fixed crash in HomeViewModel when state is null on rotation")
-    make_obs(s.id, summary="Fixed crash in HomeViewModel when state is null after rotation")
+    make_obs(s.id, summary="Fixed crash in UserRepository when state is null on rotation")
+    make_obs(s.id, summary="Fixed crash in UserRepository when state is null after rotation")
 
     mod = get_reflect_steps()
     conn = get_connection()
@@ -75,7 +75,7 @@ def test_dedup_marks_similar_stale():
 def test_dedup_keeps_distinct_observations():
     from repomem.db import get_connection
     s = make_session()
-    make_obs(s.id, summary="Fixed crash in HomeViewModel")
+    make_obs(s.id, summary="Fixed crash in UserRepository")
     make_obs(s.id, summary="Upgraded Room to 2.8.4")
 
     mod = get_reflect_steps()

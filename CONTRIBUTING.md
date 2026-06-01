@@ -43,7 +43,7 @@ Before contributing, understand the core constraints — these are non-negotiabl
 
 ```bash
 # Clone the repo
-git clone https://github.com/your-username/RepoMem
+git clone https://github.com/SUDARSHANCHAUDHARI/RepoMem
 cd RepoMem
 
 # Verify tests pass out of the box (no install needed)

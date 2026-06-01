@@ -12,10 +12,10 @@ from . import db
 
 # ── Entity extraction ─────────────────────────────────────────────────────────
 
-# PascalCase class/object names (min 2 words joined, e.g. HomeViewModel)
+# PascalCase class/object names (min 2 words joined, e.g. UserRepository)
 _PASCAL = re.compile(r"\b([A-Z][a-z]+(?:[A-Z][a-z]+)+)\b")
 
-# snake_case file references (e.g. build.gradle.kts, HomeViewModel.kt)
+# snake_case file references (e.g. build.gradle.kts, UserService.kt)
 _SNAKE_FILE = re.compile(r"\b([a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+)\b")
 
 # Known library/tool names (exact match, case-insensitive)

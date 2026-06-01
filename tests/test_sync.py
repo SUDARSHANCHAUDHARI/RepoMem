@@ -47,7 +47,7 @@ def test_export_creates_chunk(tmp_path, monkeypatch):
     init_db()
 
     s = make_session()
-    make_obs(s.id, summary="Fixed crash in HomeViewModel")
+    make_obs(s.id, summary="Fixed crash in UserRepository")
 
     stats = export_sync(commit=False)
     assert stats["observations"] == 1
@@ -57,7 +57,7 @@ def test_export_creates_chunk(tmp_path, monkeypatch):
     chunk = json.loads(chunk_file.read_text())
     assert chunk["machine"] == _machine_id()
     assert len(chunk["observations"]) == 1
-    assert chunk["observations"][0]["summary"] == "Fixed crash in HomeViewModel"
+    assert chunk["observations"][0]["summary"] == "Fixed crash in UserRepository"
 
 
 def test_export_watermark_increments(tmp_path, monkeypatch):

@@ -26,17 +26,17 @@ from repomem.capture import _capture_releases
 
 
 def test_save_and_get_release():
-    save_release("DreamWeave", "1.2.1", version_code=5)
-    releases = get_releases(project="DreamWeave")
+    save_release("MyApp", "1.2.1", version_code=5)
+    releases = get_releases(project="MyApp")
     assert len(releases) == 1
     assert releases[0]["version_name"] == "1.2.1"
     assert releases[0]["version_code"] == 5
 
 
 def test_get_last_release_returns_newest():
-    save_release("DreamWeave", "1.0.0")
-    save_release("DreamWeave", "1.2.1")
-    last = get_last_release("DreamWeave")
+    save_release("MyApp", "1.0.0")
+    save_release("MyApp", "1.2.1")
+    last = get_last_release("MyApp")
     assert last["version_name"] == "1.2.1"
 
 
@@ -60,13 +60,13 @@ def test_merge_branch():
 
 def test_capture_releases_detects_version():
     text = "Released v1.3.0 to Play Store successfully."
-    _capture_releases(text, "RainLock", "sess1")
-    releases = get_releases(project="RainLock")
+    _capture_releases(text, "UtilLib", "sess1")
+    releases = get_releases(project="UtilLib")
     assert any(r["version_name"] == "1.3.0" for r in releases)
 
 
 def test_capture_releases_ignores_no_version():
-    text = "Fixed a crash in HomeViewModel."
+    text = "Fixed a crash in UserRepository."
     _capture_releases(text, "TestApp", "sess1")
     releases = get_releases(project="TestApp")
     assert len(releases) == 0

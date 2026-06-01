@@ -36,35 +36,51 @@ OBS_TYPES = [
 ]
 
 # ── Known project folders ──────────────────────────────────────────────────────
+# Used to tag observations with their parent folder for filtering.
+# Add your own folder names here — any folder in your repo root that groups projects.
+# Example: if you keep repos in ~/code/mobile/, ~/code/web/, ~/code/tools/, add those.
 KNOWN_FOLDERS = [
-    "AndroidApps",
-    "AIProjects",
-    "SignageProjects",
-    "WebAppsProjects",
-    "FromAndroidToWebApps",
-    "AIDashboards",
-    "RustProjects",
-    "CyberSecurity",
-    "Plugins",
-    "Practice",
-    "QA Projects",
+    "mobile",
+    "web",
+    "backend",
+    "tools",
+    "plugins",
+    "experiments",
+    "services",
+    "apps",
+    "libs",
+    "scripts",
 ]
 
 # ── Topic keywords for auto-tagging ────────────────────────────────────────────
+# Maps topic names to keyword lists. An observation is tagged with the topic
+# whose keywords appear most often in the observation text.
+# Customize for your tech stack — add, remove, or rename topics freely.
 TOPIC_KEYWORDS = {
-    "room":        ["room", "database", "dao", "entity", "migration", "sqlite"],
-    "hilt":        ["hilt", "di", "dependency injection", "inject", "module", "component"],
-    "compose":     ["compose", "composable", "recomposition", "LazyColumn", "scaffold"],
-    "agp":         ["agp", "android gradle", "build.gradle", "gradle plugin"],
-    "kotlin":      ["kotlin", "coroutine", "flow", "stateflow", "suspend"],
-    "networking":  ["retrofit", "ktor", "okhttp", "api", "network", "http"],
-    "navigation":  ["navigation", "navgraph", "navhost", "deeplink", "backstack"],
-    "viewmodel":   ["viewmodel", "uistate", "uievent", "uieffect"],
-    "datastore":   ["datastore", "preferences", "sharedpreferences"],
-    "build":       ["build", "gradle", "ksp", "kapt", "compileSdk", "targetSdk"],
-    "release":     ["release", "play store", "aab", "signing", "keystore"],
-    "performance": ["performance", "recomposition", "slow", "lag", "memory leak"],
-    "security":    ["security", "proguard", "obfuscation", "keystore", "certificate"],
+    "database":    ["database", "migration", "schema", "query", "sql", "sqlite",
+                    "dao", "entity", "orm", "room", "prisma", "drizzle"],
+    "di":          ["dependency injection", "inject", "di", "hilt", "dagger",
+                    "ioc", "container", "wire", "provider"],
+    "ui":          ["ui", "compose", "composable", "component", "widget",
+                    "layout", "render", "view", "screen", "scaffold"],
+    "build":       ["build", "gradle", "webpack", "vite", "cmake", "make",
+                    "ci", "pipeline", "compile", "lint", "ksp", "kapt"],
+    "networking":  ["api", "http", "network", "request", "response", "retrofit",
+                    "ktor", "okhttp", "fetch", "axios", "rest", "graphql"],
+    "state":       ["state", "viewmodel", "stateflow", "livedata", "store",
+                    "redux", "zustand", "observable", "reactive", "flow"],
+    "auth":        ["auth", "authentication", "login", "token", "session",
+                    "oauth", "jwt", "permission", "credential"],
+    "storage":     ["storage", "cache", "preferences", "datastore", "sharedprefs",
+                    "localstorage", "keyvalue", "persist"],
+    "release":     ["release", "deploy", "publish", "version", "tag",
+                    "signing", "store", "upload", "distribution"],
+    "performance": ["performance", "slow", "lag", "memory", "leak", "optimize",
+                    "profile", "benchmark", "latency", "throughput"],
+    "security":    ["security", "vulnerability", "obfuscation", "certificate",
+                    "ssl", "tls", "encryption", "proguard", "r8"],
+    "testing":     ["test", "mock", "fake", "stub", "assert", "coverage",
+                    "unit", "integration", "e2e", "fixture"],
 }
 
 

@@ -22,19 +22,19 @@ def seed():
     from repomem.db import save_session, save_observation, save_pending, save_decision
     from repomem.models import Session, Observation, Pending, Decision
 
-    s = Session(project="DreamWeave", repo_path="/tmp")
+    s = Session(project="MyApp", repo_path="/tmp")
     save_session(s)
     save_observation(Observation(
-        session_id=s.id, project="DreamWeave", type="bugfix",
-        summary="Fixed crash in HomeViewModel on rotation",
+        session_id=s.id, project="MyApp", type="bugfix",
+        summary="Fixed crash in UserRepository on rotation",
         created_at=int(time.time()),
     ))
     save_observation(Observation(
-        session_id=s.id, project="DreamWeave", type="warning",
+        session_id=s.id, project="MyApp", type="warning",
         summary="Never use force unwrap",
         created_at=int(time.time()),
     ))
-    save_pending(Pending(project="DreamWeave", task="Write migration tests", priority="P1",
+    save_pending(Pending(project="MyApp", task="Write migration tests", priority="P1",
                          session_id=s.id))
     save_decision(Decision(scope="ALL", topic="di", decision="Use Hilt for DI"))
     return s
@@ -52,8 +52,8 @@ def test_load_observations_returns_list():
 
 def test_load_observations_query_filter():
     seed()
-    obs = _load_observations(query="HomeViewModel")
-    assert any("HomeViewModel" in o["summary"] for o in obs)
+    obs = _load_observations(query="UserRepository")
+    assert any("UserRepository" in o["summary"] for o in obs)
 
 
 def test_load_pending_returns_tasks():

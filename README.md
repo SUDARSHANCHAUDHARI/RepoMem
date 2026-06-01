@@ -1,5 +1,11 @@
 # RepoMem
 
+[![Tests](https://github.com/SUDARSHANCHAUDHARI/RepoMem/actions/workflows/tests.yml/badge.svg)](https://github.com/SUDARSHANCHAUDHARI/RepoMem/actions/workflows/tests.yml)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Zero dependencies](https://img.shields.io/badge/dependencies-zero-brightgreen.svg)](#)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+
 **Persistent memory for AI coding agents.**  
 Pure Python · SQLite + FTS5 · Zero dependencies · Zero API keys · Zero telemetry · MIT
 
@@ -24,7 +30,7 @@ The result: Claude arrives knowing what broke last time, what decisions were mad
 ## Install
 
 ```bash
-git clone https://github.com/your-username/RepoMem
+git clone https://github.com/SUDARSHANCHAUDHARI/RepoMem
 cd RepoMem && bash install.sh
 ```
 
@@ -317,6 +323,34 @@ cd ~/path/to/RepoMem && git pull && bash install.sh
 
 ---
 
+## Contributing
+
+Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a PR.
+
+- [Report a bug](.github/ISSUE_TEMPLATE/bug_report.md)
+- [Request a feature](.github/ISSUE_TEMPLATE/feature_request.md)
+- [Ask a question](.github/ISSUE_TEMPLATE/question.md)
+- [Security vulnerabilities](SECURITY.md) — please report privately
+
+---
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for the full history.
+
+---
+
 ## License
 
-MIT
+MIT — see [LICENSE](LICENSE) for details.
+
+---
+
+## Acknowledgements
+
+Ideas borrowed from:
+- [Basic Memory](https://github.com/basicmachines-co/basic-memory) — sleep-time reflection concept
+- [Engram](https://github.com/NilsIrl/engram) — SQLite + FTS5 architecture
+- [agentmemory](https://github.com/jayzeng/agentmemory) — injection priority and cap design
+
+See [COMPARISON.md](COMPARISON.md) for a full breakdown of tools studied.

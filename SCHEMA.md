@@ -12,7 +12,7 @@ One row per Claude Code session.
 |--------|------|-------------|
 | `id` | TEXT PK | `"2026-06-01T14:32:00"` |
 | `project` | TEXT | Project name (from git remote or dirname) |
-| `folder` | TEXT | Parent folder (AndroidApps, AIProjects, etc.) |
+| `folder` | TEXT | Parent folder (e.g. mobile, web, tools) |
 | `repo_path` | TEXT | Absolute path to repo |
 | `started_at` | INTEGER | Unix timestamp |
 | `ended_at` | INTEGER | Unix timestamp (NULL while active) |
@@ -32,7 +32,7 @@ All captured facts — the core table.
 | `project` | TEXT | Project name |
 | `folder` | TEXT | Parent folder |
 | `type` | TEXT | bugfix\|decision\|upgrade\|warning\|learning\|pending\|pattern\|error |
-| `topic` | TEXT | Auto-detected: room\|hilt\|compose\|agp\|kotlin\|networking\|build\|release |
+| `topic` | TEXT | Auto-detected: database|di|ui|build|networking|state|auth|storage|release|performance|security|testing |
 | `summary` | TEXT | One-line summary (max 200 chars) |
 | `detail` | TEXT | Full context (max 2000 chars after defrag) |
 | `date` | TEXT | YYYY-MM-DD |
