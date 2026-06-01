@@ -56,7 +56,7 @@ bash install.sh
 ### Verify your environment
 
 ```bash
-# Should show 126 passed (or more if you added tests)
+# Should show 146 passed (or more if you added tests)
 python3 -m pytest tests/ -q
 
 # Should show DB healthy
@@ -99,10 +99,9 @@ RepoMem/
 │   └── defrag.py             # Weekly Sunday 3am: merge dupes, archive stale, vacuum
 │
 ├── skills/
-│   ├── repomem-recall/       # Claude Code skill — /recall search
-│   └── repomem-add/          # Claude Code skill — quick observation save
+│   └── repomem/              # Claude Code skill — /repomem (all memory operations)
 │
-├── tests/                    # pytest test suite (126 tests)
+├── tests/                    # pytest test suite (146 tests)
 │   ├── test_db.py
 │   ├── test_capture.py
 │   ├── test_inject.py
@@ -116,7 +115,9 @@ RepoMem/
 │   ├── test_graphify.py
 │   ├── test_mcp_server.py
 │   ├── test_web_viewer.py
-│   └── test_tui.py
+│   ├── test_tui.py
+│   ├── test_config.py
+│   └── test_hooks.py
 │
 ├── install.sh                # One-command setup (auto-detects Python, wires hooks + MCP + crons)
 ├── pyproject.toml            # Package metadata
