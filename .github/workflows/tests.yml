@@ -1,0 +1,52 @@
+name: Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python-version: ["3.11", "3.12", "3.13"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install test dependencies
+        run: pip install pytest
+
+      - name: Run tests
+        run: python -m pytest tests/ -v --tb=short
+
+      - name: Check no external imports
+        run: |
+          python -c "
+          import ast, sys, pathlib
+          STDLIB = sys.stdlib_module_names
+          ALLOWED_THIRD_PARTY = {'pytest'}  # dev only
+          violations = []
+          for f in pathlib.Path('repomem').rglob('*.py'):
+              tree = ast.parse(f.read_text())
+              for node in ast.walk(tree):
+                  if isinstance(node, (ast.Import, ast.ImportFrom)):
+                      names = [a.name for a in node.names] if isinstance(node, ast.Import) else [node.module or '']
+                      for name in names:
+                          top = name.split('.')[0]
+                          if top and top not in STDLIB and top not in ALLOWED_THIRD_PARTY and top != 'repomem':
+                              violations.append(f'{f}:{node.lineno}: import {top}')
+          if violations:
+              print('External imports found (stdlib-only rule violated):')
+              for v in violations: print(' ', v)
+              sys.exit(1)
+          print('OK — no external imports')
+          "
