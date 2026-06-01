@@ -90,9 +90,9 @@ fi
 # ── Install Claude Code skills ─────────────────────────────────────────────────
 if [ -d "$CLAUDE_DIR/skills" ]; then
     echo "Installing skills..."
-    cp -r "$SCRIPT_DIR/skills/repomem-recall" "$CLAUDE_DIR/skills/"
-    cp -r "$SCRIPT_DIR/skills/repomem-add"    "$CLAUDE_DIR/skills/"
-    echo -e "  ${GREEN}✅ Skills installed${NC}"
+    mkdir -p "$CLAUDE_DIR/skills/repomem"
+    cp "$SCRIPT_DIR/skills/repomem/SKILL.md" "$CLAUDE_DIR/skills/repomem/SKILL.md"
+    echo -e "  ${GREEN}✅ /repomem skill installed${NC}"
 else
     echo -e "  ${YELLOW}⚠️  Claude skills dir not found — skills not installed${NC}"
 fi
