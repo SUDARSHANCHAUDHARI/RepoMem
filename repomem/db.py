@@ -12,7 +12,7 @@ from contextlib import contextmanager
 from .config import DB_PATH, ensure_dirs
 from .models import Session, Observation, Decision, Pending, Pattern, SearchResult
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 3
 
 DDL = """
 PRAGMA journal_mode = WAL;
@@ -225,19 +225,72 @@ def db():
 
 
 def init_db() -> None:
-    """Create schema if not exists."""
+    """Create schema if not exists, then run any pending migrations."""
     ensure_dirs()
     conn = get_connection()
     try:
         conn.executescript(DDL)
-        # Set schema version if not set
         cur = conn.execute("SELECT version FROM schema_version")
         row = cur.fetchone()
+        current = row[0] if row else 0
         if not row:
-            conn.execute("INSERT INTO schema_version VALUES (?)", (SCHEMA_VERSION,))
+            conn.execute("INSERT INTO schema_version VALUES (1)")
+            current = 1
+        _run_migrations(conn, current)
+        conn.execute("UPDATE schema_version SET version=?", (SCHEMA_VERSION,))
         conn.commit()
     finally:
         conn.close()
+
+
+def _run_migrations(conn: sqlite3.Connection, from_version: int) -> None:
+    """Apply incremental migrations from from_version to SCHEMA_VERSION."""
+
+    def _col_exists(table: str, col: str) -> bool:
+        rows = conn.execute(f"PRAGMA table_info({table})").fetchall()
+        return any(r["name"] == col for r in rows)
+
+    def _table_exists(table: str) -> bool:
+        return bool(conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name=?", (table,)
+        ).fetchone())
+
+    # v1 → v2: add conflict_id to observations
+    if from_version < 2:
+        if _col_exists("observations", "id") and not _col_exists("observations", "conflict_id"):
+            conn.execute("ALTER TABLE observations ADD COLUMN conflict_id INTEGER")
+
+    # v2 → v3: add releases and branches tables, errors table, entities/entity_links
+    if from_version < 3:
+        for table, ddl in [
+            ("releases", """CREATE TABLE IF NOT EXISTS releases (
+                id INTEGER PRIMARY KEY AUTOINCREMENT, project TEXT NOT NULL,
+                version_name TEXT NOT NULL, version_code INTEGER,
+                released_at TEXT NOT NULL, store TEXT NOT NULL DEFAULT 'playstore',
+                notes TEXT NOT NULL DEFAULT '', session_id TEXT NOT NULL DEFAULT '')"""),
+            ("branches", """CREATE TABLE IF NOT EXISTS branches (
+                id INTEGER PRIMARY KEY AUTOINCREMENT, project TEXT NOT NULL,
+                branch TEXT NOT NULL, pr_number INTEGER, pr_url TEXT NOT NULL DEFAULT '',
+                status TEXT NOT NULL DEFAULT 'open', purpose TEXT NOT NULL DEFAULT '',
+                created_at TEXT NOT NULL, merged_at TEXT,
+                session_id TEXT NOT NULL DEFAULT '')"""),
+            ("errors", """CREATE TABLE IF NOT EXISTS errors (
+                id INTEGER PRIMARY KEY AUTOINCREMENT, project TEXT NOT NULL,
+                error_text TEXT NOT NULL, root_cause TEXT NOT NULL DEFAULT '',
+                fix TEXT NOT NULL DEFAULT '', recurred INTEGER NOT NULL DEFAULT 0,
+                first_seen TEXT NOT NULL, last_seen TEXT,
+                session_id TEXT NOT NULL DEFAULT '', is_resolved INTEGER NOT NULL DEFAULT 0)"""),
+            ("entities", """CREATE TABLE IF NOT EXISTS entities (
+                id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL,
+                type TEXT NOT NULL, project TEXT NOT NULL DEFAULT '',
+                first_seen TEXT NOT NULL DEFAULT (date('now')),
+                mention_count INTEGER NOT NULL DEFAULT 1)"""),
+            ("entity_links", """CREATE TABLE IF NOT EXISTS entity_links (
+                entity_id INTEGER NOT NULL, obs_id INTEGER NOT NULL,
+                PRIMARY KEY (entity_id, obs_id))"""),
+        ]:
+            if not _table_exists(table):
+                conn.execute(ddl)
 
 
 # ── Sessions ──────────────────────────────────────────────────────────────────
