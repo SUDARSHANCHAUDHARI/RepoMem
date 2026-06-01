@@ -232,10 +232,12 @@ def init_db() -> None:
         conn.executescript(DDL)
         cur = conn.execute("SELECT version FROM schema_version")
         row = cur.fetchone()
-        current = row[0] if row else 0
         if not row:
+            # Fresh DB — schema just created, set version and run all migrations
             conn.execute("INSERT INTO schema_version VALUES (1)")
-            current = 1
+            current = 0  # run from 0 so all migrations apply
+        else:
+            current = row[0]
         _run_migrations(conn, current)
         conn.execute("UPDATE schema_version SET version=?", (SCHEMA_VERSION,))
         conn.commit()
