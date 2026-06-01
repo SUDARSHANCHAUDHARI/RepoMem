@@ -10,6 +10,23 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ---
 
+## [0.1.1] — 2026-06-01
+
+### Added
+- `/repomem` Claude Code skill — consolidated single skill replacing `repomem-add` + `repomem-recall` sub-skills; auto-installed by `install.sh`
+- `tests/test_config.py` — 9 tests for config path resolution, env override, `ensure_dirs()`
+- `.github/workflows/publish.yml` — PyPI trusted publish on `v*` tag with version sync gate
+- Version sync check in CI — `pyproject.toml` and `__init__.py` must match on every push
+
+### Fixed
+- `install.sh` now auto-creates `~/.claude/skills/` if missing; removes stale `repomem-add`/`repomem-recall` sub-skills on upgrade
+- `graphify-out/` added to `.gitignore`
+- Comparison tables (README + COMPARISON.md) fully re-verified against all 11 competitor repos — corrected stars, licenses, feature claims
+- Acknowledgements expanded with proper per-repo credit table
+- `Development Status` upgraded from Alpha → Beta in `pyproject.toml`
+
+---
+
 ## [0.1.0] — 2026-06-01
 
 Initial open source release after 4 phases of development.
