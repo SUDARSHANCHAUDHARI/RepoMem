@@ -117,6 +117,7 @@ For agents without MCP, use the CLI directly at the end of each session:
 ```bash
 repomem add --type decision --summary "Used Ktor over Retrofit for KMP" --topic networking
 repomem add-pending "Add unit tests for ViewModel" --project MyApp --priority P1
+repomem import-chat ~/Downloads/session.md --project MyApp   # import historical sessions
 ```
 
 ---

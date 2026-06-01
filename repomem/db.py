@@ -682,7 +682,9 @@ def get_stats(project: Optional[str] = None) -> dict:
                 "SELECT COUNT(*) FROM decisions WHERE is_superseded=0").fetchone()[0]
             projects = conn.execute(
                 "SELECT DISTINCT project FROM observations WHERE is_archived=0").fetchall()
-            db_size = DB_PATH.stat().st_size if DB_PATH.exists() else 0
+            import os as _os2
+            _db_path_for_size = Path(_os2.environ.get("REPOMEM_DIR", str(DB_PATH.parent))) / "memory.db"
+            db_size = _db_path_for_size.stat().st_size if _db_path_for_size.exists() else 0
             return {
                 "observations": obs,
                 "sessions": sessions,

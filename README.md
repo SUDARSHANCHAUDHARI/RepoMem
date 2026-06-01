@@ -55,17 +55,22 @@ Restart Claude Code. Done.
 ## Quick start
 
 ```bash
-repomem status                           # DB stats
-repomem doctor                           # health check
-repomem search "null pointer crash"      # search memory
+repomem status                                    # DB stats
+repomem doctor                                    # health check
+repomem search "null pointer crash"               # search memory
 repomem search "database migration" --project my-app
-repomem pending                          # open tasks
-repomem decisions                        # architectural decisions
-repomem server                           # web UI → http://localhost:39000
-repomem tui                              # full-screen terminal UI
-repomem graphify                         # god nodes for current repo
-repomem obsidian                         # export to Obsidian vault
-repomem sync --export                    # export for cross-machine sync
+repomem pending                                   # open tasks
+repomem decisions                                 # architectural decisions
+repomem server                                    # web UI → http://localhost:39000
+repomem tui                                       # full-screen terminal UI
+repomem graphify                                  # god nodes for current repo
+repomem obsidian                                  # export to Obsidian vault
+repomem obsidian --no-wikilinks                   # export without wikilinks
+repomem import-chat ~/Downloads/session.md        # import old chat export
+repomem import-chat ~/Downloads/session.md --move # import + delete source
+repomem resolve-error 3                           # mark error #3 resolved
+repomem merge-branch feat/my-feature --pr-number 42
+repomem sync --export                             # export for cross-machine sync
 ```
 
 ---
@@ -128,10 +133,10 @@ The skill is **Claude Code-only** — it uses Claude Code's `SKILL.md` format. T
 | Step | Detail |
 |------|--------|
 | Extract observations | Regex patterns detect bugfix/decision/upgrade/warning/learning/error/pending |
-| Tag topics | Keywords match build, networking, database, compose, etc. |
+| Tag topics | Keywords match build, networking, database, compose, etc. — short keywords use word-boundary matching to prevent false positives |
 | Link entities | PascalCase classes, known libraries, filenames extracted and linked |
 | Detect errors | Exception/Crash/FAILED patterns captured with root cause + fix |
-| Detect releases | "released v1.2.0" / "Play Store upload" patterns |
+| Detect releases | `released v1.2.0`, `uploaded AAB`, `TestFlight build`, `git tag v`, `versionName`, `bumped to` patterns |
 | Track branch | `git branch --show-current` saved per project |
 | Store | All written to SQLite with FTS5 triggers for instant search |
 
@@ -144,8 +149,10 @@ The skill is **Claude Code-only** — it uses Claude Code's `SKILL.md` format. T
 | 3 | Recent observations ranked by recency × confidence | up to 10 |
 | 4 | Conflict warnings (contradicting decisions) | up to 4 |
 | 5 | Release age warning (if >90 days since last release) | 1 line |
-| 6 | Graphify god nodes (high-blast-radius files) | up to 5 |
-| 7 | Unresolved errors with fixes | up to 3 |
+| 6 | Cross-project patterns (seen in 2+ projects) | up to 3 |
+| 7 | Graphify god nodes (high-blast-radius files) | up to 5 |
+| 8 | Hot entities (most frequently touched classes/files, ≥3 mentions) | up to 3 |
+| 9 | Unresolved errors with fixes | up to 3 |
 | — | **Hard cap: ≤2000 characters total** | — |
 
 ---
@@ -185,7 +192,7 @@ RepoMem captures 8 structured types automatically from session text:
 
 ## Interfaces
 
-### CLI — 17 commands
+### CLI — 20 commands
 
 | Command | Description |
 |---------|-------------|
@@ -194,6 +201,7 @@ RepoMem captures 8 structured types automatically from session text:
 | `repomem pending` | List open tasks, optional `--project` |
 | `repomem add-pending <task>` | Add a task with `--priority P1/P2/P3` |
 | `repomem resolve <id>` | Mark a pending task resolved |
+| `repomem resolve-error <id>` | Mark a tracked error as resolved |
 | `repomem decisions` | List architectural decisions |
 | `repomem add-decision` | Record a decision with `--topic`, `--scope`, `--reason` |
 | `repomem status` | DB stats: obs count, sessions, projects, DB size |
@@ -201,8 +209,10 @@ RepoMem captures 8 structured types automatically from session text:
 | `repomem entities` | List extracted entities; `--name` to find obs by entity |
 | `repomem releases` | List auto-detected releases |
 | `repomem branches` | List tracked open branches |
+| `repomem merge-branch <branch>` | Mark a branch as merged (`--pr-number`, `--pr-url`) |
+| `repomem import-chat <file.md>` | Import a raw Claude session export into memory (`--project`, `--move`) |
 | `repomem sync` | `--export` to git chunk, `--import` to merge peers |
-| `repomem obsidian` | Export to Obsidian vault as wikilinked Markdown |
+| `repomem obsidian` | Export to Obsidian vault (`--project`, `--vault`, `--no-wikilinks`) |
 | `repomem graphify` | God nodes for current repo, `--threshold` edges |
 | `repomem tui` | Full-screen terminal UI |
 | `repomem server` | Start web viewer, default port 39000 |
@@ -394,5 +404,6 @@ RepoMem was built by studying the work of others. Full credit where it's due:
 | [Cognee](https://github.com/topoteretes/cognee) | topoteretes | Knowledge graph integration concept — led directly to the graphify integration in Phase 4 |
 | [Zep](https://github.com/getzep/zep) | getzep | Temporal reasoning: age-labelled observations ("3mo ago"), recency × confidence ranking |
 | [mem0](https://github.com/mem0ai/mem0) | mem0ai | ADD-only accumulation model (never overwrite), entity linking design, temporal decay concept |
+| [claude-code-memory-setup](https://github.com/lucasrosati/claude-code-memory-setup) | lucasrosati | Vault-aware wikilink strategy (scan real notes, code-block-safe, first-occurrence-only, longest-match-first), `SHORT_KEYWORDS` word-boundary fix for topic detection, `import-chat` pipeline concept, dynamic Obsidian frontmatter tags, `processed:` timestamp field |
 
 See [COMPARISON.md](COMPARISON.md) for a full breakdown of all tools studied.

@@ -10,6 +10,35 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ---
 
+## [0.2.0] — 2026-06-01
+
+19 improvements derived from deep study of `claude-code-memory-setup` and a line-by-line audit of RepoMem's own code.
+
+### Fixed
+- `db.py`: `get_stats()` used hardcoded `DB_PATH` for DB size — now reads from `REPOMEM_DIR` env var like `get_connection()` does
+- `mcp_server.py`: `repomem_save` tool was missing `link_observation()` call — MCP-saved observations now get entity extraction and linking
+- `capture.py`: `detect_topic()` used substring matching for all keywords — short keywords (`di`, `ui`, `sql`, `api`, `ksp`, `r8`, `orm`) now use word-boundary matching to prevent false positives (`"audio"` → `di`, `"build"` → `ui`)
+- `capture.py`: `_RELEASE_SIGNALS` missed common Android/iOS patterns — now detects `versionName`, `uploaded AAB/APK`, `TestFlight build`, `git tag v`, `bumped to`, `App Store Connect`, `tagged v`
+
+### Added
+- `repomem/utils.py`: new shared `text_similarity()` utility — eliminates identical `_similarity()` function duplicated in `reflect.py` and `defrag.py`
+- `obsidian.py`: **vault-aware wikilinks** — scans real `.md` files in the vault, links to existing notes (not blind PascalCase), code-block-safe, first-occurrence-only, longest-match-first, double-link prevention
+- `obsidian.py`: **dynamic topic tags** in frontmatter — collects unique topic values from observations and adds them as Obsidian tags (e.g. `tags: [repomem, project-memory, ui, di, networking]`)
+- `obsidian.py`: **`type:`, `status:`, `source:`, `processed:`** fields in frontmatter — enables Obsidian Dataview queries
+- `obsidian.py`: **patterns section** — `🔁 Patterns` now exported per project
+- `obsidian.py`: **releases section** — `🚀 Releases` now exported per project (Play Store + App Store history)
+- `obsidian.py`: **open branches section** — `🌿 Open Branches` now exported per project
+- `obsidian.py`: wikilinks now applied to **decisions, errors, and pending text** — not just observation summaries
+- `obsidian.py`: **`--no-wikilinks`** flag on `repomem obsidian` command
+- `cli.py`: **`repomem resolve-error <id>`** — mark a tracked error as resolved (db function existed, no CLI)
+- `cli.py`: **`repomem merge-branch <branch>`** — mark a branch as merged with optional `--pr-number` / `--pr-url` (db function existed, no CLI)
+- `cli.py`: **`repomem import-chat <file.md>`** — import a raw exported Claude session into memory via the existing `capture.py` pipeline; `--project` override, `--move` to delete source after import
+- `inject.py`: top 3 frequently-touched entities (≥3 mentions) now surfaced in session-start context under `HOT ENTITIES`
+- `config.py`: `SHORT_TOPIC_KEYWORDS` set exported for use in topic detection
+- Tests: 146 → 186 (+40 new tests covering all 19 items)
+
+---
+
 ## [0.1.1] — 2026-06-01
 
 ### Added

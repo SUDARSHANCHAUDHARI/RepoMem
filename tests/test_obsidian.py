@@ -61,9 +61,9 @@ def test_render_project_contains_sections():
     assert "## ⚡ Decisions" in content
     assert "Use Hilt for injection" in content
     assert "## 📋 Pending" in content
-    assert "Add unit tests for ViewModel" in content
+    assert "Add unit tests for" in content  # ViewModel gets wikilinked
     assert "## 📝 Observations" in content
-    assert "UserRepository" in content
+    assert "UserRepository" in content  # appears in wikilink [[UserRepository]]
 
 
 def test_render_project_has_frontmatter():
@@ -71,7 +71,12 @@ def test_render_project_has_frontmatter():
     content = _render_project("MyApp")
     assert content.startswith("---")
     assert "project: MyApp" in content
-    assert "tags: [repomem, project-memory]" in content
+    assert "tags:" in content
+    assert "repomem" in content
+    assert "project-memory" in content
+    assert "source: repomem" in content
+    assert "type: project-memory" in content
+    assert "processed:" in content
 
 
 def test_render_project_has_wikilinks():
