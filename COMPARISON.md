@@ -4,43 +4,78 @@ A detailed breakdown of why RepoMem was built instead of using an existing tool.
 
 ---
 
-## The tools evaluated
+## Tools evaluated
 
-| Tool | Stars | Language | Storage |
-|------|-------|----------|---------|
-| [claude-mem](https://github.com/cnych/claude-mem) | ~79k | TypeScript | SQLite + Chroma |
-| [Engram](https://github.com/NilsIrl/engram) | ~4k | Go (binary) | SQLite + FTS5 |
-| [Basic Memory](https://github.com/basicmachines-co/basic-memory) | ~500 | Python | Markdown |
-| [mem0](https://github.com/mem0ai/mem0) | ~57k | Python | Vector DB |
-| **RepoMem** | — | Python | SQLite + FTS5 |
+| Tool | Stars | Language | Storage | License |
+|------|-------|----------|---------|---------|
+| [claude-mem](https://github.com/cnych/claude-mem) | ~79k | TypeScript (compiled) | SQLite + Chroma vector DB | MIT |
+| [Engram](https://github.com/NilsIrl/engram) | ~4k | Go (binary) | SQLite + FTS5 | MIT |
+| [Basic Memory](https://github.com/basicmachines-co/basic-memory) | ~500 | Python | Markdown files | AGPL |
+| [mem0](https://github.com/mem0ai/mem0) | ~57k | Python | Vector DB (cloud) | Apache 2 |
+| **RepoMem** | — | Python (stdlib only) | SQLite + FTS5 | **MIT** |
 
 ---
 
-## Feature matrix
+## Full feature comparison
 
-| Feature | claude-mem | Engram | Basic Memory | mem0 | **RepoMem** |
-|---------|-----------|--------|--------------|------|-------------|
-| Zero API keys | ✅ | ✅ | ✅ | ❌ (OpenAI) | ✅ |
-| Zero telemetry | Unknown | ✅ | ✅ | ❌ (opt-out) | ✅ |
+### Core
+
+| Feature | claude-mem | Engram | Basic Memory | mem0 | RepoMem |
+|---------|:---------:|:------:|:------------:|:----:|:-------:|
+| Zero API keys required | ✅ | ✅ | ✅ | ❌ OpenAI | ✅ |
+| Zero telemetry | ❓ unknown | ✅ | ✅ | ❌ opt-out | ✅ |
+| Zero external dependencies | ❌ | ❌ | ❌ | ❌ | ✅ |
 | Zero compiled binaries | ❌ | ❌ | ✅ | ✅ | ✅ |
-| Zero external deps | ❌ | ❌ | ❌ | ❌ | ✅ |
-| Full-text search | ✅ | ✅ | Partial | ✅ | ✅ |
-| MCP server | ✅ | ✅ | ❌ | ❌ | ✅ |
-| Stop hook | ✅ | Partial | ❌ | ❌ | ✅ |
+| Fully auditable source | ❌ | Partial | ✅ | ✅ | ✅ |
+| Works offline / air-gapped | ✅ | ✅ | ✅ | ❌ | ✅ |
+| Local-only storage | ✅ | ✅ | ✅ | ❌ | ✅ |
+
+### Capture & search
+
+| Feature | claude-mem | Engram | Basic Memory | mem0 | RepoMem |
+|---------|:---------:|:------:|:------------:|:----:|:-------:|
+| Stop hook (session end capture) | ✅ | Partial | ❌ | ❌ | ✅ |
 | SessionStart injection | ❌ | ❌ | ❌ | ❌ | ✅ |
-| Sleep-time reflection | ❌ | ❌ | ✅ | ❌ | ✅ |
-| Conflict detection | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Full-text search (FTS5) | ✅ | ✅ | Partial | ✅ | ✅ |
+| Structured observation types | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Auto topic detection | ❌ | ❌ | ❌ | ❌ | ✅ |
 | Entity linking | ❌ | ❌ | ❌ | ❌ | ✅ |
-| Error tracking | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Error / crash detection | ❌ | ❌ | ❌ | ❌ | ✅ |
 | Release tracking | ❌ | ❌ | ❌ | ❌ | ✅ |
-| Graphify integration | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Branch tracking | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Private tag stripping | ❌ | ❌ | ❌ | ❌ | ✅ |
+
+### Intelligence
+
+| Feature | claude-mem | Engram | Basic Memory | mem0 | RepoMem |
+|---------|:---------:|:------:|:------------:|:----:|:-------:|
+| Sleep-time reflection | ❌ | ❌ | ✅ | ❌ | ✅ |
+| Duplicate detection | ❌ | ❌ | ❌ | ✅ | ✅ |
+| Conflict / contradiction detection | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Pattern promotion (cross-project) | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Temporal decay / confidence scoring | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Recency × confidence ranking | ❌ | ❌ | ❌ | ❌ | ✅ |
+
+### Interfaces
+
+| Feature | claude-mem | Engram | Basic Memory | mem0 | RepoMem |
+|---------|:---------:|:------:|:------------:|:----:|:-------:|
+| MCP server | ✅ | ✅ | ❌ | ❌ | ✅ |
+| CLI | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Web viewer | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Terminal UI (TUI) | ❌ | ❌ | ❌ | ❌ | ✅ |
 | Obsidian sync | ❌ | ❌ | ❌ | ❌ | ✅ |
 | Git cross-machine sync | ❌ | ❌ | ❌ | ❌ | ✅ |
-| Web viewer | ❌ | ❌ | ❌ | ❌ | ✅ |
-| 190+ repo scale | ✅ | ✅ | ❌ | ✅ | ✅ |
-| Android-specific | ❌ | ❌ | ❌ | ❌ | ✅ |
-| Auditable source | ❌ | Partial | ✅ | ✅ | ✅ |
-| License | MIT | MIT | AGPL | Apache 2 | **MIT** |
+| Graphify code graph integration | ❌ | ❌ | ❌ | ❌ | ✅ |
+
+### Scale & maintenance
+
+| Feature | claude-mem | Engram | Basic Memory | mem0 | RepoMem |
+|---------|:---------:|:------:|:------------:|:----:|:-------:|
+| Multi-repo / multi-project | ✅ | ✅ | ❌ | ✅ | ✅ |
+| Weekly defrag / vacuum | ❌ | ❌ | ❌ | ❌ | ✅ |
+| DB schema migrations | ❌ | ❌ | ❌ | ❌ | ✅ |
+| DB health diagnostics (doctor) | ❌ | ❌ | ❌ | ❌ | ✅ |
 
 ---
 
@@ -48,35 +83,52 @@ A detailed breakdown of why RepoMem was built instead of using an existing tool.
 
 ### claude-mem
 
-Good tool but TypeScript requires compilation, pulls in many npm dependencies, and
-the Chroma vector DB is a heavyweight dependency. Not auditable without build tooling.
+- **Language barrier** — TypeScript requires `npm install` + compilation step; not auditable without a build toolchain
+- **Heavy storage** — uses Chroma vector DB alongside SQLite; significant dependency footprint
+- **No session injection** — memory is available on demand via MCP but not injected at session start automatically
+- **No reflection** — no background process to dedup, promote patterns, or flag contradictions
 
 ### Engram
 
-Closest in spirit — SQLite + FTS5 like RepoMem. But requires a compiled Go binary,
-which is a trust/auditability concern. No SessionStart injection, no sleep-time reflection.
+The closest alternative in spirit — also uses SQLite + FTS5. Main gaps:
+
+- **Binary distribution** — requires a compiled Go binary, which is a trust and auditability concern
+- **No SessionStart injection** — memory must be queried explicitly, not injected automatically
+- **No sleep-time reflection** — no nightly dedup, pattern promotion, or conflict flagging
+- **No web/TUI interface** — CLI only
+- **No project-level tracking** — treats all memories as a global flat store
 
 ### Basic Memory
 
-Pure Python but stores everything as Markdown files — no structured schema, no FTS5,
-no MCP server. The AGPL license complicates forks. Sleep-time reflection concept
-(the best idea from Basic Memory) is adopted in RepoMem's `reflect.py`.
+- **No structured schema** — stores everything as Markdown files; no typed observations, no FTS5 index
+- **No MCP server** — cannot be queried mid-session by Claude
+- **No SessionStart injection** — no automatic context at session start
+- **AGPL license** — complicates forks and commercial use
+- **Best idea adopted** — sleep-time reflection concept from Basic Memory is implemented in RepoMem's `reflect.py`
 
 ### mem0
 
-57k stars, YC-backed, well-engineered. But requires OpenAI API keys (no local-only mode),
-has telemetry on by default, and uses a vector database. Not suitable for offline/air-gapped
-dev environments or for users who don't want cloud dependencies.
+- **Requires API keys** — no local-only mode; OpenAI (or similar) required for embeddings
+- **Telemetry on by default** — must actively opt out; not suitable for sensitive codebases
+- **Cloud dependency** — not suitable for offline or air-gapped environments
+- **Vector DB overhead** — adds significant complexity for what is fundamentally a developer note-taking problem
+- **YC-backed / commercial trajectory** — pricing model may change
 
 ---
 
 ## What RepoMem uniquely adds
 
-1. **SessionStart injection** — memory arrives at session start, not just on demand
-2. **Graphify integration** — knows which files are God Nodes in your codebase
-3. **Android-specific tracking** — topic keywords for Room, Hilt, Compose, AGP, etc.
-4. **Sleep-time reflection** — nightly dedup, pattern promotion, contradiction flagging
-5. **Error tracking** — detects crash patterns, tracks recurrence, surfaces fixes
-6. **Release tracking** — warns when last Play Store release was >90 days ago
-7. **Conflict detection** — flags contradicting decisions and links them
-8. **100% stdlib** — no pip install needed beyond Python itself
+| Feature | Why it matters |
+|---------|----------------|
+| **SessionStart injection** | Memory arrives automatically at session start — no prompting needed |
+| **Structured observation types** | `bugfix`, `decision`, `upgrade`, `warning`, `error` etc. — queryable, not just text blobs |
+| **Conflict detection** | Contradicting decisions are flagged and linked — never re-litigate silently |
+| **Error tracking** | Crash patterns auto-detected, recurrence counted, fixes surfaced at next session |
+| **Sleep-time reflection** | Nightly: dedup, pattern promotion, contradiction flagging, confidence decay |
+| **Graphify integration** | Knows which files in your codebase have the most connections (God Nodes) |
+| **Release tracking** | Warns when no release has been made in over 90 days |
+| **Git sync** | Export/import memory chunks via git for cross-machine continuity |
+| **Obsidian sync** | Export all project memories as interlinked Markdown for your vault |
+| **Web + TUI interfaces** | Browse, search, and manage memory without touching the CLI |
+| **100% stdlib** | `pip install` nothing — Python 3.11+ is all you need |
+| **Schema migrations** | DB auto-migrates as RepoMem adds new tables/columns — no manual steps |
