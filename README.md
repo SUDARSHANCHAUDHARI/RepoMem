@@ -20,7 +20,7 @@ The result: Claude arrives knowing what broke last time, what decisions were mad
 ## Install
 
 ```bash
-git clone https://github.com/SUDARSHANCHAUDHARI/RepoMem
+git clone https://github.com/your-username/RepoMem
 cd RepoMem && bash install.sh
 ```
 
@@ -31,16 +31,17 @@ Restart Claude Code. Done.
 ## Quick start
 
 ```bash
-repomem status                          # DB stats
-repomem doctor                          # health check
-repomem search "HomeViewModel crash"    # search memory
-repomem search "Room migration" --project DreamWeave
-repomem pending                         # open tasks
-repomem decisions                       # architectural decisions
-repomem server                          # web UI → http://localhost:39000
-repomem graphify                        # god nodes for current repo
-repomem obsidian                        # export to Obsidian vault
-repomem sync --export                   # export for cross-machine sync
+repomem status                           # DB stats
+repomem doctor                           # health check
+repomem search "null pointer crash"      # search memory
+repomem search "database migration" --project my-app
+repomem pending                          # open tasks
+repomem decisions                        # architectural decisions
+repomem server                           # web UI → http://localhost:39000
+repomem tui                              # full-screen terminal UI
+repomem graphify                         # god nodes for current repo
+repomem obsidian                         # export to Obsidian vault
+repomem sync --export                    # export for cross-machine sync
 ```
 
 ## How it works
@@ -116,6 +117,7 @@ repomem branches [--project]
 repomem sync --export | --import [--no-commit]
 repomem obsidian [--project] [--vault <path>]
 repomem graphify [--project] [--repo <path>] [--threshold <n>]
+repomem tui
 repomem server [--port 39000]
 ```
 
@@ -128,6 +130,14 @@ repomem server
 
 Pages: Dashboard · Observations · Decisions · Pending · Errors · Projects · Search  
 Dark mode · No build step · Keyboard shortcut: `/` to focus search
+
+## Terminal UI
+
+```bash
+repomem tui
+```
+
+Keys: `j`/`k` navigate · `/` search · `Enter` detail · `o`/`p`/`d`/`e` switch mode · `q` quit
 
 ## Privacy
 
@@ -151,9 +161,8 @@ Dark mode · No build step · Keyboard shortcut: `/` to focus search
 | `entities` | PascalCase classes, files, known libraries |
 | `entity_links` | Entity ↔ observation links |
 | `errors` | Crashes + root causes + fixes |
-| `releases` | Play Store / App Store releases |
+| `releases` | App store releases |
 | `branches` | Git branch tracking |
-| `errors` | Unresolved exceptions with recurrence count |
 
 See [SCHEMA.md](SCHEMA.md) for full column reference.
 
@@ -166,14 +175,14 @@ See [COMPARISON.md](COMPARISON.md) for a detailed breakdown. Short answer:
 | Language | TypeScript | Go binary | Python | **Python** |
 | External deps | Many | Binary | Some | **Zero** |
 | Graphify integration | ❌ | ❌ | ❌ | **✅** |
-| Android-specific tracking | ❌ | ❌ | ❌ | **✅** |
 | Sleep-time reflection | ❌ | ❌ | ✅ | **✅** |
 | MCP server | ✅ | ✅ | ❌ | **✅** |
 | Web viewer | ❌ | ❌ | ❌ | **✅** |
+| Terminal UI | ❌ | ❌ | ❌ | **✅** |
 | Obsidian sync | ❌ | ❌ | ❌ | **✅** |
 | Git cross-machine sync | ❌ | ❌ | ❌ | **✅** |
 | License | MIT | MIT | AGPL | **MIT** |
 
 ## License
 
-MIT © 2026 SudarshanTechLabs
+MIT
