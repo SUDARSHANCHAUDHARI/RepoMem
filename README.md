@@ -46,6 +46,7 @@ Restart Claude Code. Done.
 | Package install | Copies package to `~/.repomem/lib/` |
 | Hook wiring | Registers Stop + SessionStart hooks in Claude Code settings |
 | MCP server | Registers MCP server in Claude Code settings |
+| Skill install | Installs `/repomem` skill to `~/.claude/skills/repomem/` |
 | Cron jobs | Adds nightly reflection + weekly defrag |
 | Health check | Verifies DB is initialized and healthy |
 
