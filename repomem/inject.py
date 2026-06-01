@@ -164,7 +164,15 @@ def build_context(project: Optional[str] = None) -> str:
         except Exception:
             pass
 
-    # 6. Graphify god nodes
+    # 6. Cross-project patterns
+    patterns = db.get_patterns(min_seen=2)[:3]
+    if patterns:
+        lines = ["║ PATTERNS (seen across projects)\n"]
+        for p in patterns:
+            lines.append(f"║  🔁 {p['title']} — seen in {p['seen_count']} projects\n")
+        add_section("".join(lines))
+
+    # 7. Graphify god nodes
     try:
         from .graphify import build_graph_context
         graph_ctx = build_graph_context(project)
@@ -173,7 +181,7 @@ def build_context(project: Optional[str] = None) -> str:
     except Exception:
         pass
 
-    # 7. Unresolved errors
+    # 8. Unresolved errors
     errors = db.get_unresolved_errors(project=project)
     if errors:
         lines = ["║ UNRESOLVED ERRORS\n"]
@@ -182,14 +190,6 @@ def build_context(project: Optional[str] = None) -> str:
             lines.append(f"║  ❌ {e['error_text'][:100]}{recurred}\n")
             if e["fix"]:
                 lines.append(f"║     fix: {e['fix'][:80]}\n")
-        add_section("".join(lines))
-
-    # 5. Cross-project patterns
-    patterns = db.get_patterns(min_seen=2)[:3]
-    if patterns:
-        lines = ["║ PATTERNS (seen across projects)\n"]
-        for p in patterns:
-            lines.append(f"║  🔁 {p['title']} — seen in {p['seen_count']} projects\n")
         add_section("".join(lines))
 
     footer = "╚══\n"
