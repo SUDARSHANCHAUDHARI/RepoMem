@@ -74,6 +74,8 @@ repomem sync --export                    # export for cross-machine sync
 RepoMem ships a native Claude Code skill at `skills/repomem/`. Once installed, type `/repomem` in any Claude Code session to get a full memory interface without touching the CLI.
 
 **Install the skill:**
+
+`install.sh` handles this automatically. If you need to reinstall manually:
 ```bash
 mkdir -p ~/.claude/skills/repomem
 cp skills/repomem/SKILL.md ~/.claude/skills/repomem/
