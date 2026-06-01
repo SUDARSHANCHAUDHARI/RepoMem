@@ -13,15 +13,15 @@ A detailed breakdown of why RepoMem was built instead of using an existing tool.
 |------|------:|----------|---------|:-------:|---------|
 | [claude-mem](https://github.com/thedotmack/claude-mem) | ~80k | TypeScript (compiled .cjs) | SQLite + Chroma | No | Apache 2 |
 | [Engram](https://github.com/Gentleman-Programming/engram) | ~4k | Go (pre-compiled binary) | SQLite + FTS5 | No | MIT |
-| [agentmemory](https://github.com/jayzeng/agentmemory) | ~5 | TypeScript (compiled) | Markdown + qmd | No* | MIT |
-| [mem0](https://github.com/mem0ai/mem0) | ~57k | Python | Qdrant vector DB | **Yes** | Apache 2 |
+| [agentmemory](https://github.com/jayzeng/agentmemory) | ~5 | TypeScript | Markdown flat files + optional qmd | No* | MIT |
+| [mem0](https://github.com/mem0ai/mem0) | ~57k | Python + TypeScript | Vector DB (Qdrant default) | **Yes** (LLM key) | Apache 2 |
 | [Basic Memory](https://github.com/basicmachines-co/basic-memory) | ~3k | Python | Markdown + SQLite | No | **AGPL** |
-| [basic-memory-skills](https://github.com/basicmachines-co/basic-memory-skills) | ~20 | Markdown | Needs Basic Memory | No | MIT |
-| [Letta / MemGPT](https://github.com/letta-ai/letta) | ~14k | Python | Tiered (RAM+disk) | Optional | Apache 2 |
-| [Cognee](https://github.com/topoteretes/cognee) | ~3k | Python | Knowledge graph | Optional | Apache 2 |
-| [Zep](https://github.com/getzep/zep) | ~2k | Go | Cloud (proprietary) | **Yes** | Proprietary |
-| [LangChain Memory](https://github.com/langchain-ai/langchain) | ~100k | Python | Flexible (pluggable) | Optional | MIT |
-| [LlamaIndex Memory](https://github.com/run-llama/llama_index) | ~40k | Python/TS | Vector store | Optional | MIT |
+| [basic-memory-skills](https://github.com/basicmachines-co/basic-memory-skills) | ~20 | Markdown skills | Needs Basic Memory | No | MIT |
+| [Letta / MemGPT](https://github.com/letta-ai/letta) | ~23k | Python | Tiered (RAM+disk) | Optional | Apache 2 |
+| [Cognee](https://github.com/topoteretes/cognee) | ~18k | Python | Knowledge graph + vector | Optional | Apache 2 |
+| [Zep](https://github.com/getzep/zep) | ~5k | Go + Python SDKs | Cloud (CE deprecated) | **Yes** | Apache 2 |
+| [LangChain Memory](https://github.com/langchain-ai/langchain) | ~138k | Python | Flexible (pluggable) | Optional | MIT |
+| [LlamaIndex Memory](https://github.com/run-llama/llama_index) | ~50k | Python/TS | Vector store | Optional | MIT |
 | MindStudio / Milvus | — | Python | Milvus + SQLite | **Yes** (Voyage AI) | — |
 | **RepoMem** | — | **Python (stdlib only)** | **SQLite + FTS5** | **No** | **MIT** |
 
@@ -260,8 +260,7 @@ Total cap: 16K chars
 
 ### Letta (formerly MemGPT)
 
-**Source:** [ML Mastery article — 6 Best AI Agent Memory Frameworks](https://machinelearningmastery.com/the-6-best-ai-agent-memory-frameworks-you-should-try-in-2026/)  
-**Stars:** Large · **Language:** Python · **License:** Apache 2.0 · **Self-hosted:** Yes
+**Stars:** ~23k · **Language:** Python · **License:** Apache 2.0 · **Self-hosted:** Yes
 
 **What it does:**
 OS-inspired tiered memory architecture mimicking how an operating system manages RAM vs disk:
@@ -292,8 +291,7 @@ Agents call functions explicitly to read/write/archive memory. No passive captur
 
 ### Cognee
 
-**Source:** [ML Mastery article — 6 Best AI Agent Memory Frameworks](https://machinelearningmastery.com/the-6-best-ai-agent-memory-frameworks-you-should-try-in-2026/)  
-**Language:** Python · **License:** Open source · **Self-hosted:** Yes
+**Stars:** ~18k · **Language:** Python · **License:** Apache 2.0 · **Self-hosted:** Yes
 
 **What it does:**
 Builds a knowledge graph from unstructured data — documents, conversations, code. Agents reason over relationships, not just text blobs.
@@ -323,28 +321,28 @@ Input: conversations + docs + code
 ### Zep
 
 **Source:** [ML Mastery article — 6 Best AI Agent Memory Frameworks](https://machinelearningmastery.com/the-6-best-ai-agent-memory-frameworks-you-should-try-in-2026/)  
-**Type:** Cloud service · **License:** Proprietary
+**Type:** Cloud-first platform (Community Edition deprecated) · **License:** Apache 2.0 · **Stars:** ~5k
 
 **What it does:**
-Long-term memory store with entity and intent extraction, progressive summarisation, and temporal search.
+Context engineering platform with sub-200ms retrieval. Uses Graphiti (open-source temporal knowledge graph) to build relationship-aware context that understands how information evolves over time. Supports chat history, business data, documents, and events.
 
 ```
 Conversation → entity extraction → intent detection → structured facts
-Progressive summarisation: keeps key information as history grows
+Temporal knowledge graph: understands how information changes over time
 Temporal search: "what was the state of X last Tuesday?"
 ```
 
-**Unique feature:** Temporal search is genuinely impressive — the ability to ask about the state of something at a specific point in time, not just "most recent."
+**Unique feature:** Temporal knowledge graph via Graphiti is genuinely impressive — relationship-aware retrieval that understands the evolution of information, not just recency.
 
 **Ideas we borrowed:**
 - **Temporal reasoning** → our `inject.py` ranks observations by `recency × confidence`, labels old observations with age ("3mo ago")
 - **Progressive summarisation** → `reflect.py` deduplicates and promotes high-confidence observations
 
 **Why we didn't use it:**
-- Cloud-only — all data goes to their servers
-- Proprietary — no self-hosted option
-- API key required
-- Pricing risk
+- Cloud-first — Community Edition has been deprecated; self-hosted path is unclear
+- Requires API key / account for meaningful use
+- Designed for production AI applications, not personal developer tooling
+- Pricing risk for a personal productivity tool
 
 ---
 
@@ -458,9 +456,9 @@ At query time: **parallel retrieval** from semantic + episodic, merged into cont
 | [mem0](https://github.com/mem0ai/mem0) | 57k | ✅ Deep | Entity linking, temporal reasoning, ADD-only | ❌ API key + telemetry |
 | [Basic Memory](https://github.com/basicmachines-co/basic-memory) | 3k | ✅ Deep | Sleep-time reflection, defrag, archive-never-delete | ❌ AGPL |
 | [basic-memory-skills](https://github.com/basicmachines-co/basic-memory-skills) | 20 | ✅ Deep | Skill design patterns, wikilinks, schema validation | ❌ needs Basic Memory |
-| Letta / MemGPT | Large | ✅ Article | Tiered memory (RAM/disk), intentional writes | ❌ agent framework |
-| Cognee | — | ✅ Article | Knowledge graph integration concept | ❌ vector search needed |
-| Zep | — | ✅ Article | Temporal reasoning, progressive summarisation | ❌ cloud only |
-| LangChain Memory | Large | ✅ Article | Modular design concept | ❌ heavy ecosystem |
-| LlamaIndex Memory | Large | ✅ Article | Document-aware context | ❌ wrong use case |
+| Letta / MemGPT | ~23k | ✅ Article | Tiered memory (RAM/disk), intentional writes | ❌ agent framework |
+| Cognee | ~18k | ✅ Deep | Knowledge graph integration concept | ❌ vector search needed |
+| Zep | ~5k | ✅ Deep | Temporal reasoning, progressive summarisation | ❌ CE deprecated, cloud-first |
+| LangChain Memory | ~138k | ✅ Article | Modular design concept | ❌ heavy ecosystem |
+| LlamaIndex Memory | ~50k | ✅ Article | Document-aware context | ❌ wrong use case |
 | MindStudio/Milvus | — | ✅ Article | Chunk quality, similarity thresholds | ❌ needs Voyage AI |
