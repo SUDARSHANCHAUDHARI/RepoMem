@@ -139,6 +139,7 @@ repomem add-pending "Add unit tests for ViewModel" --project MyApp --priority P1
 repomem status        # should show DB stats
 repomem doctor        # should show ✅ All checks passed
 repomem server        # open http://localhost:39000 in browser
+repomem tui           # full-screen terminal UI (press q to quit)
 ```
 
 ---

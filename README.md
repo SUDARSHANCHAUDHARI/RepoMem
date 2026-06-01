@@ -250,7 +250,7 @@ See [SCHEMA.md](SCHEMA.md) for full column-level documentation.
 | `REPOMEM_DIR` | `~/.repomem` | Override storage location |
 | `REPOMEM_INSTALL` | `~/.repomem/lib` | Override package path (used by hooks) |
 | `REPOMEM_PROJECT` | auto (git remote) | Override project name detection |
-| `REPOMEM_OBSIDIAN_VAULT` | `~/…/RepoMem` in vault | Override Obsidian vault export path |
+| `REPOMEM_OBSIDIAN_VAULT` | `~/.repomem/exports/obsidian` | Override Obsidian vault export path |
 | `REPOMEM_PORT` | `39000` | Web viewer port |
 
 ---

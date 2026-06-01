@@ -44,6 +44,7 @@ repomem/          # Core Python package
   obsidian.py     # Obsidian vault export
   sync.py         # Cross-machine git sync
   graphify.py     # Graphify integration
+  tui.py          # Full-screen terminal UI (curses)
 server/
   mcp_server.py   # MCP server (stdio JSON-RPC)
   web_viewer.py   # Web UI (stdlib http.server)
