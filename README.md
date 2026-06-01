@@ -381,9 +381,18 @@ MIT — see [LICENSE](LICENSE) for details.
 
 ## Acknowledgements
 
-Ideas borrowed from:
-- [Basic Memory](https://github.com/basicmachines-co/basic-memory) — sleep-time reflection concept
-- [Engram](https://github.com/NilsIrl/engram) — SQLite + FTS5 architecture
-- [agentmemory](https://github.com/jayzeng/agentmemory) — injection priority and cap design
+RepoMem was built by studying the work of others. Full credit where it's due:
 
-See [COMPARISON.md](COMPARISON.md) for a full breakdown of tools studied.
+| Project | Author / Org | What RepoMem borrowed |
+|---------|-------------|----------------------|
+| [claude-mem](https://github.com/thedotmack/claude-mem) | thedotmack | `<private>` content tagging, progressive disclosure injection strategy, Stop + SessionStart hook wiring pattern |
+| [Engram](https://github.com/Gentleman-Programming/engram) | Gentleman-Programming | SQLite + FTS5 as the right storage backend for developer memory, MCP server design, session lifecycle (start/end) tooling |
+| [Basic Memory](https://github.com/basicmachines-co/basic-memory) | basicmachines-co | Sleep-time reflection concept (nightly background processing), per-project scoping, archive-never-delete philosophy |
+| [basic-memory-skills](https://github.com/basicmachines-co/basic-memory-skills) | basicmachines-co | Memory skill design patterns, wikilink-based cross-referencing, schema validation approach |
+| [agentmemory](https://github.com/jayzeng/agentmemory) | jayzeng | Injection priority ordering, hard 2000-char context cap, scratchpad-as-highest-priority pattern, graceful degradation on hook failure |
+| [Letta / MemGPT](https://github.com/letta-ai/letta) | letta-ai | Tiered memory model (hot/cold), sleep-time compute concept, intentional write pattern |
+| [Cognee](https://github.com/topoteretes/cognee) | topoteretes | Knowledge graph integration concept — led directly to the graphify integration in Phase 4 |
+| [Zep](https://github.com/getzep/zep) | getzep | Temporal reasoning: age-labelled observations ("3mo ago"), recency × confidence ranking |
+| [mem0](https://github.com/mem0ai/mem0) | mem0ai | ADD-only accumulation model (never overwrite), entity linking design, temporal decay concept |
+
+See [COMPARISON.md](COMPARISON.md) for a full breakdown of all tools studied.
