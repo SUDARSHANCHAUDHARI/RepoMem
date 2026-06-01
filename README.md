@@ -309,21 +309,24 @@ Short summary — see [COMPARISON.md](COMPARISON.md) for 5 detailed comparison t
 
 | | [claude-mem](https://github.com/thedotmack/claude-mem) | [Engram](https://github.com/Gentleman-Programming/engram) | [Basic Memory](https://github.com/basicmachines-co/basic-memory) | [mem0](https://github.com/mem0ai/mem0) | **RepoMem** |
 |---|:---:|:---:|:---:|:---:|:---:|
-| Zero dependencies | ❌ npm | ❌ Go binary | ❌ | ❌ | ✅ stdlib only |
-| Zero API keys | ✅ | ✅ | ✅ | ❌ | ✅ |
-| One-command install | ✅ | ✅ | ✅ | ❌ | ✅ |
-| SessionStart auto-injection | ✅ | ✅ | ✅ | ❌ | ✅ |
-| Structured typed observations | Partial | ✅ | ✅ | ❌ | ✅ 8 types |
-| Sleep-time reflection | ❌ | ✅ | ❌ | ❌ | ✅ |
-| Conflict detection | ❌ | Beta | ❌ | ❌ | ✅ |
-| Error tracking | ❌ | ✅ | ❌ | ❌ | ✅ |
-| MCP server | ✅ | ✅ | ✅ | ❌ | ✅ |
-| Web viewer (local) | ✅ | Cloud only | ✅ | ❌ | ✅ local |
-| Terminal UI | Partial | ✅ | ✅ | ❌ | ✅ |
+| Zero dependencies | ❌ npm+Bun | ❌ Go binary | ❌ uv+Python | ❌ pip+LLM API | ✅ stdlib only |
+| Zero API keys | ✅ | ✅ | ✅ | ❌ needs LLM | ✅ |
+| One-command install | ✅ npx | ✅ brew | ✅ uv | ❌ | ✅ bash |
+| Stop hook (auto-capture) | ✅ | ✅ | ❌ | ❌ | ✅ |
+| SessionStart auto-injection | ✅ | ✅ | ❌ | ❌ | ✅ |
+| Structured typed observations | Partial | ✅ | ✅ categorical | ❌ | ✅ 8 types |
+| Per-project filtering | ✅ | ✅ | ✅ | ❌ | ✅ |
+| Sleep-time reflection | ❌ | ❌ | ❌ | ❌ | ✅ nightly |
+| Conflict detection | ❌ | Beta (needs LLM) | ❌ | ❌ | ✅ autonomous |
+| Error tracking | ❌ | ❌ | ❌ | ❌ | ✅ |
+| MCP server | ✅ 4 tools | ✅ 19 tools | ✅ | ❌ | ✅ 7 tools |
+| Web viewer (local, no signup) | ✅ local | ❌ cloud only | ❌ cloud only | ❌ | ✅ local |
+| Terminal UI | ❌ | ✅ | Partial | ❌ | ✅ |
 | Obsidian sync | ❌ | Beta | ✅ | ❌ | ✅ |
-| Git cross-machine sync | ❌ | ✅ | Partial | ❌ | ✅ |
-| DB schema migrations | ❌ | ✅ | ✅ | ❌ | ✅ |
-| Fully auditable (no binary) | ❌ | ❌ Go binary | ✅ | ✅ | ✅ |
+| Git cross-machine sync | ❌ | ✅ | Manual | ❌ | ✅ |
+| DB schema migrations | ❌ | ❌ confirmed | ✅ Alembic | ❌ | ✅ |
+| Private content tagging | ✅ `<private>` | ❌ | ❌ | ❌ | ✅ `<private>` |
+| Fully auditable (no binary) | ❌ compiled JS | ❌ Go binary | ✅ | ✅ | ✅ |
 | License | Apache 2 | MIT | **AGPL** | Apache 2 | **MIT** |
 
 ---

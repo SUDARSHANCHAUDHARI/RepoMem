@@ -62,15 +62,15 @@ A detailed breakdown of why RepoMem was built instead of using an existing tool.
 
 | Feature | claude-mem | Engram | Basic Memory | mem0 | RepoMem |
 |---------|:---------:|:------:|:------------:|:----:|:-------:|
-| Automatic session-end capture (Stop hook) | ✅ | ✅ | ✅ | ❌ manual | ✅ |
-| Automatic session-start injection | ✅ | ✅ | ✅ | ❌ | ✅ |
+| Automatic session-end capture (Stop hook) | ✅ | ✅ | ❌ | ❌ manual | ✅ |
+| Automatic session-start injection | ✅ | ✅ | ❌ | ❌ | ✅ |
 | Structured typed observations | Partial | ✅ typed | ✅ categorical | ❌ flat text | ✅ 8 types |
 | Auto topic tagging | ❌ | ❌ | ❌ | ❌ | ✅ |
 | Entity extraction (classes, files, libs) | ❌ | ❌ | ❌ | ❌ | ✅ |
 | Error / crash auto-detection | ❌ | ❌ | ❌ | ❌ | ✅ |
 | Release version auto-detection | ❌ | ❌ | ❌ | ❌ | ✅ |
 | Git branch auto-tracking | ❌ | ❌ | ❌ | ❌ | ✅ |
-| `<private>` content stripping | ❌ | ❌ | ❌ | ❌ | ✅ |
+| `<private>` content stripping | ✅ | ❌ | ❌ | ❌ | ✅ |
 
 ### Search & retrieval
 
@@ -87,9 +87,9 @@ A detailed breakdown of why RepoMem was built instead of using an existing tool.
 
 | Feature | claude-mem | Engram | Basic Memory | mem0 | RepoMem |
 |---------|:---------:|:------:|:------------:|:----:|:-------:|
-| Sleep-time reflection (nightly) | ❌ | ✅ | ❌ | ❌ | ✅ |
+| Sleep-time reflection (nightly) | ❌ | ❌ | ❌ | ❌ | ✅ |
 | Duplicate / near-duplicate detection | ❌ | ❌ | ❌ | ✅ | ✅ 80% similarity |
-| Contradiction / conflict detection | ❌ | Beta | ❌ | ❌ | ✅ |
+| Contradiction / conflict detection | ❌ | Beta (needs LLM call) | ❌ | ❌ | ✅ autonomous |
 | Cross-project pattern promotion | ❌ | ❌ | ❌ | ❌ | ✅ 3+ projects |
 | Temporal decay (confidence over time) | ❌ | ❌ | ❌ | ❌ | ✅ |
 | Decision auto-promotion (seen 2+ times) | ❌ | ❌ | ❌ | ❌ | ✅ |
@@ -99,21 +99,21 @@ A detailed breakdown of why RepoMem was built instead of using an existing tool.
 
 | Feature | claude-mem | Engram | Basic Memory | mem0 | RepoMem |
 |---------|:---------:|:------:|:------------:|:----:|:-------:|
-| MCP server (mid-session queries) | ✅ 4 tools | ✅ | ✅ | ❌ | ✅ 7 tools |
+| MCP server (mid-session queries) | ✅ 4 tools | ✅ 19 tools | ✅ | ❌ | ✅ 7 tools |
 | CLI | ✅ | ✅ | ✅ | ✅ | ✅ 17 commands |
-| Web viewer (local, dark mode) | ✅ local | Cloud only | ✅ | ❌ | ✅ local |
-| Terminal UI (vim keys) | Partial | ✅ | ✅ | ❌ | ✅ |
+| Web viewer (local, no signup) | ✅ local | ❌ cloud only | ❌ cloud only | ❌ | ✅ local |
+| Terminal UI (vim keys) | ❌ | ✅ | Partial | ❌ | ✅ |
 | Obsidian vault export | ❌ | Beta | ✅ | ❌ | ✅ wikilinks |
-| Git cross-machine sync | ❌ | ✅ | Partial | ❌ | ✅ |
+| Git cross-machine sync | ❌ | ✅ | Manual | ❌ | ✅ |
 | Code graph (Graphify) integration | ❌ | ❌ | ❌ | ❌ | ✅ |
 
 ### Scale & maintenance
 
 | Feature | claude-mem | Engram | Basic Memory | mem0 | RepoMem |
 |---------|:---------:|:------:|:------------:|:----:|:-------:|
-| Multi-repo / multi-project | ✅ | ✅ | ❌ | ✅ | ✅ |
-| Per-project filtering | ❌ | ❌ | ❌ | ❌ | ✅ |
-| DB schema auto-migration | ❌ | ❌ | ❌ | ❌ | ✅ v1→v3 |
+| Multi-repo / multi-project | ✅ | ✅ | ✅ | ❌ | ✅ |
+| Per-project filtering | ✅ | ✅ | ✅ | ❌ | ✅ |
+| DB schema auto-migration | ❌ | ❌ confirmed | ✅ Alembic | ❌ | ✅ v1→v3 |
 | DB health check (doctor command) | ❌ | ❌ | ❌ | ❌ | ✅ |
 | FTS5 index rebuild | ❌ | ❌ | — | — | ✅ |
 | DB vacuum / size control | ❌ | ❌ | — | — | ✅ |
@@ -136,27 +136,31 @@ A detailed breakdown of why RepoMem was built instead of using an existing tool.
 
 ### Engram
 
-**Good:** SQLite + FTS5, MCP server, SessionStart injection, sleep-time reflection, conflict detection (beta), TUI, Obsidian sync (beta), git sync, one-command install (`brew install`). Closest competitor to RepoMem.
+**Good:** SQLite + FTS5, 19 MCP tools, Stop + SessionStart hooks, structured typed observations, TUI, git sync, one-command install (`brew install`). Closest competitor to RepoMem feature-for-feature.
 **Problems:**
 
-- Requires a compiled Go binary — trust and auditability concern; you're running someone's binary, not readable source
-- Web viewer is cloud-hosted (Engram Cloud) — not a local-only solution
-- No project-level scoping — all memories are global across repos
-- No entity linking, release tracking, or `<private>` content stripping
-- Cross-project pattern promotion not present
-- Conflict detection is beta and requires calling out to Claude Code CLI — not fully autonomous
+- Requires a compiled Go binary — trust and auditability concern; you're running someone else's binary, not readable source
+- No sleep-time reflection — memory accumulates but is never cleaned, deduplicated, or promoted autonomously
+- Web viewer is cloud-only (Engram Cloud, opt-in) — no local web dashboard
+- Conflict detection is beta and requires an external LLM call (Claude Code / OpenCode CLI) — not autonomous
+- No entity linking, release tracking, cross-project pattern promotion
+- No `<private>` content stripping
+- Obsidian sync is beta
+- No per-project DB schema auto-migrations confirmed
 
 ### Basic Memory
 
-**Good:** Python, local storage, sleep-time reflection (the best idea in this space).  
+**Good:** Python, local storage, MCP server, per-project filtering, Obsidian sync, DB migrations (Alembic), one-command install.
 **Problems:**
 
-- Stores everything as Markdown flat files — no structured schema, no typed observations, no FTS5
-- No MCP server — Claude cannot query memory mid-session
-- No SessionStart injection — no automatic context
+- No Stop hook — session-end capture is manual, not automatic
+- No SessionStart injection — Claude does not receive memory automatically at session start
+- No sleep-time reflection — no nightly dedup, conflict detection, or pattern promotion
 - AGPL license — complicates use in commercial or proprietary projects
-- Does not scale well to many projects — no per-project filtering
-- **What RepoMem borrows:** the sleep-time reflection concept, implemented as `crons/reflect.py`
+- Web viewer is cloud-only (basicmemory.com) — requires account for the UI
+- No `<private>` content stripping, no error tracking, no entity linking
+- Markdown flat files for storage — no FTS5, no typed observation schema, no confidence ranking
+- **What RepoMem borrows:** Alembic-style schema migrations concept, per-project filtering
 
 ### mem0
 
