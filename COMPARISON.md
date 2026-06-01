@@ -7,24 +7,25 @@ A detailed breakdown of why RepoMem was built instead of using an existing tool.
 ## Tools evaluated
 
 > We studied 12 tools and 2 articles before building RepoMem. Full per-tool analysis below.
+> Star counts verified June 2026 — numbers change over time.
 
 | Tool | Stars | Language | Storage | API Key | License |
 |------|------:|----------|---------|:-------:|---------|
-| [claude-mem](https://github.com/thedotmack/claude-mem) | 79k | TypeScript (compiled .cjs) | SQLite + Chroma | No | MIT |
-| [Engram](https://github.com/Gentleman-Programming/engram) | 4k | Go (pre-compiled binary) | SQLite + FTS5 | No | MIT |
-| [agentmemory](https://github.com/jayzeng/agentmemory) | 5 | TypeScript (compiled) | Markdown + qmd | No* | MIT |
-| [mem0](https://github.com/mem0ai/mem0) | 57k | Python | Qdrant vector DB | **Yes** | Apache |
-| [Basic Memory](https://github.com/basicmachines-co/basic-memory) | 3k | Python | Markdown + SQLite | No | **AGPL** |
-| [basic-memory-skills](https://github.com/basicmachines-co/basic-memory-skills) | 20 | Markdown | Needs Basic Memory | No | MIT |
-| Letta / MemGPT | Large | Python | Tiered (RAM+disk) | Optional | Apache |
-| Cognee | — | Python | Knowledge graph | Optional | Apache |
-| Zep | — | Python | Cloud (proprietary) | **Yes** | Proprietary |
-| LangChain Memory | Large | Python | Flexible (pluggable) | Optional | MIT |
-| LlamaIndex Memory | Large | Python/TS | Vector store | Optional | MIT |
+| [claude-mem](https://github.com/thedotmack/claude-mem) | ~80k | TypeScript (compiled .cjs) | SQLite + Chroma | No | MIT |
+| [Engram](https://github.com/Gentleman-Programming/engram) | ~4k | Go (pre-compiled binary) | SQLite + FTS5 | No | MIT |
+| [agentmemory](https://github.com/jayzeng/agentmemory) | ~5 | TypeScript (compiled) | Markdown + qmd | No* | MIT |
+| [mem0](https://github.com/mem0ai/mem0) | ~57k | Python | Qdrant vector DB | **Yes** | Apache 2 |
+| [Basic Memory](https://github.com/basicmachines-co/basic-memory) | ~3k | Python | Markdown + SQLite | No | **AGPL** |
+| [basic-memory-skills](https://github.com/basicmachines-co/basic-memory-skills) | ~20 | Markdown | Needs Basic Memory | No | MIT |
+| [Letta / MemGPT](https://github.com/letta-ai/letta) | ~14k | Python | Tiered (RAM+disk) | Optional | Apache 2 |
+| [Cognee](https://github.com/topoteretes/cognee) | ~3k | Python | Knowledge graph | Optional | Apache 2 |
+| [Zep](https://github.com/getzep/zep) | ~2k | Go | Cloud (proprietary) | **Yes** | Proprietary |
+| [LangChain Memory](https://github.com/langchain-ai/langchain) | ~100k | Python | Flexible (pluggable) | Optional | MIT |
+| [LlamaIndex Memory](https://github.com/run-llama/llama_index) | ~40k | Python/TS | Vector store | Optional | MIT |
 | MindStudio / Milvus | — | Python | Milvus + SQLite | **Yes** (Voyage AI) | — |
-| **RepoMem** | — | **Python (stdlib)** | **SQLite + FTS5** | **No** | **MIT** |
+| **RepoMem** | — | **Python (stdlib only)** | **SQLite + FTS5** | **No** | **MIT** |
 
-*agentmemory keyword search works without API; semantic search requires embedding API key.
+*agentmemory keyword search works without API key; semantic search requires an embedding API key.
 
 ---
 
