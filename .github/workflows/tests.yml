@@ -28,6 +28,20 @@ jobs:
       - name: Run tests
         run: python -m pytest tests/ -v --tb=short
 
+      - name: Check version sync (pyproject.toml == __init__.py)
+        run: |
+          python -c "
+          import re, sys
+          toml = open('pyproject.toml').read()
+          init = open('repomem/__init__.py').read()
+          toml_v = re.search(r'^version\s*=\s*\"(.+?)\"', toml, re.MULTILINE).group(1)
+          init_v = re.search(r'__version__\s*=\s*\"(.+?)\"', init).group(1)
+          if toml_v != init_v:
+              print(f'Version mismatch: pyproject.toml={toml_v}, __init__.py={init_v}')
+              sys.exit(1)
+          print(f'OK — version {toml_v} in sync')
+          "
+
       - name: Check no external imports
         run: |
           python -c "
