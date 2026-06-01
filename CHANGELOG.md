@@ -8,13 +8,6 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ## [Unreleased]
 
-### Added
-- GitHub Actions CI (tests on Python 3.11/3.12/3.13, Ubuntu + macOS)
-- Issue templates (bug report, feature request, question)
-- PR template with checklist
-- SECURITY.md with vulnerability reporting process
-- CODE_OF_CONDUCT.md
-
 ---
 
 ## [0.1.0] — 2026-06-01
@@ -27,6 +20,11 @@ Initial open source release after 4 phases of development.
 - **Graphify integration** — god node detection, community tagging, session-start injection
 - **Polish install** — auto-detect Python 3.11+, wrapper script, health check, idempotent cron
 - **Full documentation** — README, SCHEMA, COMPARISON (12 tools), INSTALL, CONTRIBUTING
+- **GitHub Actions CI** — tests on Python 3.11/3.12/3.13 × Ubuntu + macOS, stdlib-only guard
+- **Issue templates** — bug report, feature request, question
+- **`/repomem` Claude Code skill** — consolidated single skill replacing sub-skills, auto-installed by `install.sh`
+- **Verified comparison tables** — all 11 competitor repos checked against live GitHub
+- **Proper acknowledgements** — per-repo credit table for everything borrowed
 
 ### Phase 3 — Polish + Integration
 - **Defrag cron** — weekly: merge dupes (85% similarity), archive stale, trim oversized, rebuild FTS5, vacuum
@@ -50,7 +48,7 @@ Initial open source release after 4 phases of development.
 - **SessionStart hook** (`hooks/memory-inject.py`) — inject context at session start (≤2000 chars)
 - **CLI** — search, add, pending, decisions, status, doctor (7 commands)
 - **One-command install** (`bash install.sh`) — wires hooks, MCP, crons into Claude Code
-- **Claude Code skills** — `/recall` and `/repomem-add`
+- **Claude Code skill** — `/repomem` (consolidated, covers all memory operations)
 
 ---
 

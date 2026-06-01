@@ -9,9 +9,9 @@ description = "Persistent memory for AI coding agents — SQLite + FTS5, zero de
 readme = "README.md"
 license = { text = "MIT" }
 authors = [{ name = "RepoMem Contributors" }]
-keywords = ["claude", "ai", "memory", "persistent", "sqlite", "developer-tools"]
+keywords = ["claude", "ai", "memory", "persistent", "sqlite", "developer-tools", "mcp", "claude-code"]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
