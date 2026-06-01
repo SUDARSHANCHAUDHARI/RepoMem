@@ -25,38 +25,44 @@ Save observations to persistent memory during or after a session.
 
 ```bash
 # Bug fix
-python3 -m repomem add \
+repomem add \
   --type bugfix \
-  --summary "Fixed NullPointerException in HomeViewModel collectLatest" \
-  --detail "Root cause: StateFlow not initialized before collect in onResume. Fix: move collect to lifecycleScope.launchWhenStarted" \
-  --topic viewmodel
+  --summary "Fixed null pointer exception in UserRepository on empty response" \
+  --detail "Root cause: response body not checked before parsing. Fix: add null check before deserializing." \
+  --topic networking
 
 # Architectural decision
-python3 -m repomem add \
+repomem add \
   --type decision \
-  --summary "Use DataStore Preferences over SharedPreferences in all new apps" \
-  --detail "SharedPreferences deprecated, DataStore is type-safe and coroutine-friendly" \
-  --topic datastore
+  --summary "Use dependency injection framework for all new modules" \
+  --detail "Manual wiring was causing circular dependencies and test difficulty" \
+  --topic build
 
 # Pending task
-python3 -m repomem add-pending \
-  "Add ProGuard rules for Retrofit 3.x" \
-  --project DreamWeave \
+repomem add-pending \
+  "Add migration rollback tests" \
+  --project my-app \
   --priority P1
 
 # Warning
-python3 -m repomem add \
+repomem add \
   --type warning \
-  --summary "Never use fallbackToDestructiveMigration() in production — data loss risk" \
-  --topic room
+  --summary "Never use destructive migration in production — causes data loss" \
+  --topic database
 
 # Upgrade
-python3 -m repomem add \
+repomem add \
   --type upgrade \
-  --summary "AGP 9.2.1 — requires Crashlytics plugin 3.0.7+" \
-  --topic agp
+  --summary "Upgraded build tool to v9 — requires plugin 3.0.7+" \
+  --topic build
+
+# Learning
+repomem add \
+  --type learning \
+  --summary "Background tasks need lifecycle-aware scope to avoid leaks" \
+  --topic threading
 ```
 
 ## Available topics
 
-room, hilt, compose, agp, kotlin, networking, navigation, viewmodel, datastore, build, release, performance, security
+database, networking, build, state, ui, testing, release, security, performance, auth

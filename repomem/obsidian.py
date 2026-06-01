@@ -1,6 +1,6 @@
 """
 RepoMem Obsidian sync — exports project memory to Obsidian markdown.
-Target: ~/SUDARSHAN_CODE/sudarshan_repos/SudarshanObsidian/RepoMem/
+Target: set via REPOMEM_OBSIDIAN_VAULT env var, or defaults to ~/obsidian-vault/RepoMem/
 Format: frontmatter + wikilinks + observations as bullet points.
 """
 from __future__ import annotations
@@ -11,7 +11,7 @@ from typing import Optional
 
 from . import db
 
-DEFAULT_VAULT = Path.home() / "SUDARSHAN_CODE/sudarshan_repos/SudarshanObsidian/RepoMem"
+DEFAULT_VAULT = Path.home() / "obsidian-vault" / "RepoMem"
 
 
 def _get_vault_path() -> Path:

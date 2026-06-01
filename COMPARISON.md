@@ -246,7 +246,7 @@ Total cap: 16K chars
 **Why we didn't use it:**
 - No per-project isolation — one `~/.agent-memory/` for everything
 - Breaks badly at 10+ repos — daily files from unrelated projects pollute context
-- No structured schema — can't query "all DreamWeave bugfixes"
+- No structured schema — can't query "all bugfixes in project X"
 - Semantic search requires qmd + external embedding API (we need zero API keys)
 - TypeScript compiled to binary — not fully auditable
 
@@ -300,7 +300,7 @@ Input: conversations + docs + code
   → graph traversal + vector search combined
 ```
 
-**Key innovation:** Graph traversal reveals connections that keyword or vector search misses. "What is related to HomeViewModel?" finds all files, decisions, and bugs connected through the graph — not just documents mentioning the word.
+**Key innovation:** Graph traversal reveals connections that keyword or vector search misses. "What is related to UserRepository?" finds all files, decisions, and bugs connected through the graph — not just documents mentioning the word.
 
 **Ideas we borrowed:**
 - **Knowledge graph integration** → Phase 4: `repomem graphify` reads `graphify-out/graph.json`

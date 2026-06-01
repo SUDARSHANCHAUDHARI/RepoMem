@@ -1,6 +1,6 @@
 # Contributing to RepoMem
 
-RepoMem is a personal tool built by SudarshanTechLabs for managing memory across 190+ repos.
+RepoMem is a personal tool for managing AI coding agent memory across many repos.
 Contributions are welcome — please read this first.
 
 ---

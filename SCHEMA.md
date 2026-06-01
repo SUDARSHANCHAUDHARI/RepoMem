@@ -119,7 +119,7 @@ Named entities extracted from observations (PascalCase classes, files, known lib
 | Column | Type | Description |
 |--------|------|-------------|
 | `id` | INTEGER PK | Auto-increment |
-| `name` | TEXT | Entity name (e.g. `HomeViewModel`) |
+| `name` | TEXT | Entity name (e.g. `UserRepository`) |
 | `type` | TEXT | class\|file\|library\|god_node |
 | `project` | TEXT | Project where first seen |
 | `first_seen` | TEXT | YYYY-MM-DD |
