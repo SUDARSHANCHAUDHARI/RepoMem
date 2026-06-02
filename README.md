@@ -36,6 +36,8 @@ cd RepoMem && bash install.sh
 
 Restart Claude Code. Done.
 
+> Also available on PyPI: `pip install repomem` installs the package but you still need `bash install.sh` to wire Claude Code hooks, MCP server, and cron jobs.
+
 **Requirements:** Python 3.11+ · No other dependencies (stdlib only)
 
 `install.sh` handles everything automatically:
