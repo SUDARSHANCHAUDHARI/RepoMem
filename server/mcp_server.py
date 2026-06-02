@@ -252,7 +252,7 @@ def handle_repomem_save(args: dict) -> dict:
         type=args["type"],
         topic=topic,
         summary=args["summary"][:200],
-        detail=args.get("detail", ""),
+        detail=args.get("detail", "")[:5000],
         date=_date.today().isoformat(),
         created_at=int(time.time()),
     )
@@ -367,10 +367,14 @@ def handle_request(req: dict) -> None:
             ok(req_id, result)
         except Exception as e:
             log.error(f"Tool {tool_name} error: {e}", exc_info=True)
-            err(req_id, -32603, str(e))
+            err(req_id, -32603, f"Internal error in {tool_name}")
 
     elif method == "ping":
         ok(req_id, {})
+
+    elif method in ("resources/list", "prompts/list"):
+        key = method.split("/")[0]
+        ok(req_id, {key: []})
 
     else:
         err(req_id, -32601, f"Method not found: {method}")

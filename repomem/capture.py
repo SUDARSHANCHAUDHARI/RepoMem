@@ -230,8 +230,8 @@ def _enrich_with_graphify(project: str, repo_path: str,
                            observations: list) -> None:
     """Persist graphify god nodes as entities and link to relevant observations."""
     try:
-        from .graphify import find_graph, get_god_nodes, enrich_observation
-        graph = find_graph(repo_path=repo_path or os.getcwd())
+        from .graphify import load_graph, get_god_nodes, enrich_observation
+        graph = load_graph(repo_path=repo_path or os.getcwd())
         if not graph:
             return
         god_nodes = get_god_nodes(graph)
