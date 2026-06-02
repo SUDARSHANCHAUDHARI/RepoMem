@@ -11,6 +11,7 @@ import json
 import os
 import sys
 import urllib.parse
+from html import escape as _esc
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 
@@ -171,9 +172,9 @@ def page_dashboard() -> str:
     rows_html = "".join(f"""
         <tr>
           <td>{_type_icon(o['type'])} {_badge(o['type'])}</td>
-          <td><a href="/observations?project={urllib.parse.quote(o['project'])}">{o['project']}</a></td>
-          <td>{o['summary'][:80]}</td>
-          <td class="muted">{o['date']}</td>
+          <td><a href="/observations?project={urllib.parse.quote(o['project'])}">{_esc(o['project'])}</a></td>
+          <td>{_esc(o['summary'][:80])}</td>
+          <td class="muted">{_esc(o['date'])}</td>
         </tr>""" for o in recent)
 
     errors = get_unresolved_errors()
@@ -181,9 +182,9 @@ def page_dashboard() -> str:
     if errors:
         err_rows = "".join(f"""
             <tr>
-              <td><a href="/observations?project={urllib.parse.quote(e['project'])}">{e['project']}</a></td>
-              <td>{e['error_text'][:80]}</td>
-              <td class="muted">{e['first_seen']}</td>
+              <td><a href="/observations?project={urllib.parse.quote(e['project'])}">{_esc(e['project'])}</a></td>
+              <td>{_esc(e['error_text'][:80])}</td>
+              <td class="muted">{_esc(e['first_seen'])}</td>
             </tr>""" for e in errors[:5])
         err_html = f"""
         <h2 class="section-title" style="margin-top:28px">❌ Unresolved Errors</h2>
@@ -230,10 +231,10 @@ def page_observations(project: str = "", query: str = "") -> str:
     rows_html = "".join(f"""
         <tr>
           <td>{_type_icon(o['type'])} {_badge(o['type'])}</td>
-          <td><a href="/observations?project={urllib.parse.quote(o['project'])}">{o['project']}</a></td>
-          <td>{o.get('topic','') or '<span class="muted">—</span>'}</td>
-          <td>{o['summary'][:100]}</td>
-          <td class="muted">{o['date']}</td>
+          <td><a href="/observations?project={urllib.parse.quote(o['project'])}">{_esc(o['project'])}</a></td>
+          <td>{_esc(o.get('topic','')) or '<span class="muted">—</span>'}</td>
+          <td>{_esc(o['summary'][:100])}</td>
+          <td class="muted">{_esc(o['date'])}</td>
         </tr>""" for o in obs)
 
     body = f"""
@@ -251,11 +252,11 @@ def page_decisions() -> str:
     decisions = get_decisions()
     rows_html = "".join(f"""
         <tr>
-          <td>{d['scope']}</td>
-          <td>{d['topic']}</td>
-          <td>{d['decision']}</td>
-          <td class="muted">{d.get('reason','')[:60]}</td>
-          <td class="muted">{d['date']}</td>
+          <td>{_esc(d['scope'])}</td>
+          <td>{_esc(d['topic'])}</td>
+          <td>{_esc(d['decision'])}</td>
+          <td class="muted">{_esc(d.get('reason','')[:60])}</td>
+          <td class="muted">{_esc(d['date'])}</td>
         </tr>""" for d in decisions)
     body = f"""
     <h2 class="section-title">Decisions ({len(decisions)})</h2>
@@ -273,9 +274,9 @@ def page_pending() -> str:
     rows_html = "".join(f"""
         <tr>
           <td>{_priority_badge(p['priority'])}</td>
-          <td><a href="/observations?project={urllib.parse.quote(p['project'])}">{p['project']}</a></td>
-          <td>{p['task']}</td>
-          <td class="muted">{p['created_at']}</td>
+          <td><a href="/observations?project={urllib.parse.quote(p['project'])}">{_esc(p['project'])}</a></td>
+          <td>{_esc(p['task'])}</td>
+          <td class="muted">{_esc(str(p['created_at']))}</td>
         </tr>""" for p in items)
     body = f"""
     <h2 class="section-title">Pending Tasks ({len(items)})</h2>
@@ -292,11 +293,11 @@ def page_errors() -> str:
     errors = get_unresolved_errors()
     rows_html = "".join(f"""
         <tr>
-          <td><a href="/observations?project={urllib.parse.quote(e['project'])}">{e['project']}</a></td>
-          <td>{e['error_text'][:100]}</td>
-          <td>{e.get('fix','')[:60] or '<span class="muted">—</span>'}</td>
+          <td><a href="/observations?project={urllib.parse.quote(e['project'])}">{_esc(e['project'])}</a></td>
+          <td>{_esc(e['error_text'][:100])}</td>
+          <td>{_esc(e.get('fix','')[:60]) or '<span class="muted">—</span>'}</td>
           <td class="muted">{e['recurred'] or 0}×</td>
-          <td class="muted">{e['first_seen']}</td>
+          <td class="muted">{_esc(e['first_seen'])}</td>
         </tr>""" for e in errors)
     body = f"""
     <h2 class="section-title">Unresolved Errors ({len(errors)})</h2>
@@ -328,10 +329,10 @@ def page_projects() -> str:
             last_date = last[0] if last else "—"
             rows_html += f"""
             <tr>
-              <td><a href="/observations?project={urllib.parse.quote(p)}">{p}</a></td>
+              <td><a href="/observations?project={urllib.parse.quote(p)}">{_esc(p)}</a></td>
               <td>{obs}</td>
               <td>{pending}</td>
-              <td class="muted">{last_date}</td>
+              <td class="muted">{_esc(str(last_date))}</td>
             </tr>"""
 
     body = f"""
@@ -399,7 +400,7 @@ class RepoMemHandler(BaseHTTPRequestHandler):
             else:
                 self._send_html("<h1>404</h1>", 404)
         except Exception as e:
-            self._send_html(f"<pre>Error: {e}</pre>", 500)
+            self._send_html(f"<pre>Error: {_esc(str(e))}</pre>", 500)
 
 
 def run(port: int = PORT) -> None:

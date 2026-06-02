@@ -248,7 +248,14 @@ def init_db() -> None:
 def _run_migrations(conn: sqlite3.Connection, from_version: int) -> None:
     """Apply incremental migrations from from_version to SCHEMA_VERSION."""
 
+    _MIGRATION_TABLES = frozenset({
+        "observations", "sessions", "decisions", "pending", "patterns",
+        "releases", "branches", "errors", "entities", "entity_links", "schema_version"
+    })
+
     def _col_exists(table: str, col: str) -> bool:
+        if table not in _MIGRATION_TABLES:
+            raise ValueError(f"Unknown table in migration: {table}")
         rows = conn.execute(f"PRAGMA table_info({table})").fetchall()
         return any(r["name"] == col for r in rows)
 

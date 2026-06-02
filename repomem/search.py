@@ -26,14 +26,8 @@ def search(query: str, project: Optional[str] = None,
 def _like_search(query: str, project: Optional[str],
                   obs_type: Optional[str], limit: int) -> list[SearchResult]:
     """Fallback LIKE search when FTS5 unavailable."""
-    import sqlite3
-    from .config import DB_PATH
-
-    if not DB_PATH.exists():
-        return []
-
-    conn = sqlite3.connect(str(DB_PATH))
-    conn.row_factory = sqlite3.Row
+    from . import db as _db_module
+    conn = _db_module.get_connection()
     try:
         filters = ["(summary LIKE ? OR detail LIKE ? OR topic LIKE ?)"]
         params: list = [f"%{query}%", f"%{query}%", f"%{query}%"]
