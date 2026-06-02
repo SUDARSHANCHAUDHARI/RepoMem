@@ -44,7 +44,7 @@ def _make_project(name="TestApp", tmp_path=None):
     db.save_session(s)
     db.save_observation(Observation(
         session_id=s.id, project=name, type="bugfix",
-        summary="Fixed crash in HomeViewModel on rotation",
+        summary="Fixed crash in OrderService on startup",
         topic="ui", created_at=int(time.time()),
     ))
     db.save_observation(Observation(
@@ -53,7 +53,7 @@ def _make_project(name="TestApp", tmp_path=None):
         topic="di", created_at=int(time.time()),
     ))
     db.save_decision(Decision(scope=name, topic="di", decision="Use Hilt everywhere", reason="Simpler DI"))
-    db.save_pending(Pending(project=name, task="Write tests for HomeViewModel", priority="P1"))
+    db.save_pending(Pending(project=name, task="Write tests for OrderService", priority="P1"))
     db.save_release(project=name, version_name="1.2.0", store="playstore")
     db.save_branch(project=name, branch="feat/new-screen")
     return s
@@ -259,12 +259,12 @@ def test_obsidian_wikilinks_in_decisions(tmp_path):
     db.save_session(s)
     db.save_decision(Decision(
         scope="WikiApp", topic="di",
-        decision="Use HomeViewModel for state management",
-        reason="Survives rotation"
+        decision="Use StateManager for state management",
+        reason="Centralises state"
     ))
     from repomem.obsidian import _render_project
     content = _render_project("WikiApp")
-    assert "[[HomeViewModel]]" in content
+    assert "[[StateManager]]" in content
 
 
 def test_obsidian_wikilinks_in_pending(tmp_path):
@@ -316,12 +316,12 @@ def test_collect_vault_notes_finds_files(tmp_path):
     from repomem.obsidian import collect_vault_notes
     vault = tmp_path / "vault"
     vault.mkdir()
-    (vault / "HomeViewModel.md").write_text("# Home")
+    (vault / "OrderService.md").write_text("# Order")
     (vault / "UserRepository.md").write_text("# User")
     (vault / ".obsidian" / "config").parent.mkdir()
     (vault / ".obsidian" / "config").write_text("{}")
     notes = collect_vault_notes(vault)
-    assert "HomeViewModel" in notes
+    assert "OrderService" in notes
     assert "UserRepository" in notes
 
 
@@ -354,39 +354,39 @@ def test_collect_vault_notes_min_length(tmp_path):
 def test_vault_wikilinks_links_real_note(tmp_path):
     """_insert_vault_wikilinks links to real vault note names."""
     from repomem.obsidian import _insert_vault_wikilinks
-    notes = ["HomeViewModel", "UserRepository"]
+    notes = ["OrderService", "UserRepository"]
     result = _insert_vault_wikilinks(
-        "Fixed crash in HomeViewModel and UserRepository during init", notes
+        "Fixed crash in OrderService and UserRepository during init", notes
     )
-    assert "[[HomeViewModel]]" in result
+    assert "[[OrderService]]" in result
     assert "[[UserRepository]]" in result
 
 
 def test_vault_wikilinks_skips_code_blocks(tmp_path):
     """_insert_vault_wikilinks does not link inside code fences."""
     from repomem.obsidian import _insert_vault_wikilinks
-    notes = ["HomeViewModel"]
-    text = "See ```HomeViewModel``` for details"
+    notes = ["OrderService"]
+    text = "See ```OrderService``` for details"
     result = _insert_vault_wikilinks(text, notes)
-    assert "[[HomeViewModel]]" not in result
+    assert "[[OrderService]]" not in result
 
 
 def test_vault_wikilinks_first_occurrence_only(tmp_path):
     """Each note is linked only on first occurrence."""
     from repomem.obsidian import _insert_vault_wikilinks
-    notes = ["HomeViewModel"]
-    text = "HomeViewModel is used. HomeViewModel is also tested."
+    notes = ["OrderService"]
+    text = "OrderService is used. OrderService is also tested."
     result = _insert_vault_wikilinks(text, notes)
-    assert result.count("[[HomeViewModel]]") == 1
+    assert result.count("[[OrderService]]") == 1
 
 
 def test_vault_wikilinks_no_double_link(tmp_path):
     """Already-wikilinked text is not double-linked."""
     from repomem.obsidian import _insert_vault_wikilinks
-    notes = ["HomeViewModel"]
-    text = "See [[HomeViewModel]] for reference"
+    notes = ["OrderService"]
+    text = "See [[OrderService]] for reference"
     result = _insert_vault_wikilinks(text, notes)
-    assert result.count("[[HomeViewModel]]") == 1
+    assert result.count("[[OrderService]]") == 1
     assert "[[[" not in result
 
 
@@ -544,7 +544,7 @@ def test_inject_includes_top_entities(tmp_path, monkeypatch):
     with get_connection() as conn:
         conn.execute(
             "INSERT INTO entities (name, type, project, first_seen, mention_count) VALUES (?,?,?,date('now'),?)",
-            ("HomeViewModel", "class", "MyApp", 10)
+            ("OrderService", "class", "MyApp", 10)
         )
         conn.execute(
             "INSERT INTO entities (name, type, project, first_seen, mention_count) VALUES (?,?,?,date('now'),?)",
