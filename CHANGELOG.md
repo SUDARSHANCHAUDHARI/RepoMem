@@ -10,6 +10,21 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ---
 
+## [0.2.1] — 2026-06-02
+
+### Fixed
+- `capture.py`: `detect_topic()` word-boundary fix was defined in config but never applied — short keywords like `"di"` now correctly use `\b` regex so `"audio"` no longer matches the `di` topic
+- `capture.py`: `_RELEASE_SIGNALS` patterns were incomplete — `uploaded AAB`, `versionName`, `TestFlight build`, `git tag v`, and `bumped to` now correctly captured
+- `mcp_server.py`: `handle_repomem_save` was missing `link_observation()` call — MCP-saved observations now get entity linking (was documented in 0.2.0 but not implemented)
+- `pyproject.toml`: build backend changed from `setuptools.backends.legacy:build` to `setuptools.build_meta` — fixes PyPI publish on standard CI environments
+
+### Changed
+- Test fixtures use generic class names (`OrderService`, `UserRepository`) instead of Android-specific `HomeViewModel`
+- Repo made public on GitHub with branch protection (no force push, CI required to merge)
+- Dependabot enabled for weekly GitHub Actions version bumps
+
+---
+
 ## [0.2.0] — 2026-06-01
 
 19 improvements derived from deep study of `claude-code-memory-setup` and a line-by-line audit of RepoMem's own code.
@@ -98,7 +113,8 @@ Initial open source release after 4 phases of development.
 
 ---
 
-[Unreleased]: https://github.com/SUDARSHANCHAUDHARI/RepoMem/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/SUDARSHANCHAUDHARI/RepoMem/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/SUDARSHANCHAUDHARI/RepoMem/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/SUDARSHANCHAUDHARI/RepoMem/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/SUDARSHANCHAUDHARI/RepoMem/releases/tag/v0.1.1
 [0.1.0]: https://github.com/SUDARSHANCHAUDHARI/RepoMem/releases/tag/v0.1.0
