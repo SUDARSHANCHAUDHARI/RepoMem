@@ -10,6 +10,19 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ---
 
+## [0.2.2] — 2026-06-02
+
+### Fixed
+- `capture.py`: graphify enrichment was silently dead — `find_graph` was imported but the function is named `load_graph`; the `ImportError` was swallowed by `except Exception: pass`, meaning god-node enrichment never ran for any user since launch
+- `web_viewer.py`: XSS — all database values rendered into HTML were unescaped; stack traces with `<`/`>` corrupted HTML, and malicious session content could execute JS in the local browser. Added `html.escape()` to every db field
+- `search.py`: `_like_search` (FTS5 fallback) used hardcoded `DB_PATH` ignoring `REPOMEM_DIR` env var — wrong database hit for any non-default install path. Now uses `get_connection()` which already reads env var correctly
+- `mcp_server.py`: tool errors leaked install path via `str(e)` — now returns a generic message; full error still logged
+- `mcp_server.py`: `resources/list` and `prompts/list` returned `-32601 Method not found` causing noisy MCP client warnings — now returns empty list
+- `mcp_server.py`: MCP `detail` field was uncapped — added 5000 char limit at ingestion
+- `db.py`: `_col_exists()` PRAGMA f-string — added table whitelist to guard against future injection risk
+
+---
+
 ## [0.2.1] — 2026-06-02
 
 ### Fixed
@@ -113,7 +126,8 @@ Initial open source release after 4 phases of development.
 
 ---
 
-[Unreleased]: https://github.com/SUDARSHANCHAUDHARI/RepoMem/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/SUDARSHANCHAUDHARI/RepoMem/compare/v0.2.2...HEAD
+[0.2.2]: https://github.com/SUDARSHANCHAUDHARI/RepoMem/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/SUDARSHANCHAUDHARI/RepoMem/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/SUDARSHANCHAUDHARI/RepoMem/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/SUDARSHANCHAUDHARI/RepoMem/releases/tag/v0.1.1

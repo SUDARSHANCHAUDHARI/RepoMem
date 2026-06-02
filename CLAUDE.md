@@ -6,7 +6,7 @@ Pure Python · SQLite + FTS5 · Zero dependencies · Zero API keys · Zero telem
 
 ## Status
 - **All 4 phases COMPLETE + 19 improvements** — 186/186 tests passing
-- **Current version:** v0.2.1
+- **Current version:** v0.2.2
 - **Installed and running** at `~/.repomem/`
 - **GitHub:** https://github.com/SUDARSHANCHAUDHARI/RepoMem (public, main branch)
 - **PyPI:** publish workflow wired — tags `v*` auto-publish via trusted publishing

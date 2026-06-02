@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "repomem"
-version = "0.2.1"
+version = "0.2.2"
 description = "Persistent memory for AI coding agents — SQLite + FTS5, zero dependencies"
 readme = "README.md"
 license = { text = "MIT" }
