@@ -38,16 +38,20 @@ jobs:
           m = re.search(r'__version__\s*=\s*\"(.+?)\"', content)
           print(m.group(1))
           ")
-          echo "Tag: $TAG | pyproject.toml: $TOML_VERSION | __init__.py: $INIT_VERSION"
-          if [ "$TAG" != "$TOML_VERSION" ]; then
-            echo "ERROR: tag ($TAG) does not match pyproject.toml version ($TOML_VERSION)"
-            exit 1
+          echo "Trigger: ${{ github.event_name }} | Ref: $TAG | pyproject.toml: $TOML_VERSION | __init__.py: $INIT_VERSION"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "Manual trigger — skipping tag/version match check."
+          else
+            if [ "$TAG" != "$TOML_VERSION" ]; then
+              echo "ERROR: tag ($TAG) does not match pyproject.toml version ($TOML_VERSION)"
+              exit 1
+            fi
+            if [ "$TAG" != "$INIT_VERSION" ]; then
+              echo "ERROR: tag ($TAG) does not match __init__.py version ($INIT_VERSION)"
+              exit 1
+            fi
+            echo "Version check passed."
           fi
-          if [ "$TAG" != "$INIT_VERSION" ]; then
-            echo "ERROR: tag ($TAG) does not match __init__.py version ($INIT_VERSION)"
-            exit 1
-          fi
-          echo "Version check passed."
 
       - name: Run tests before publishing
         run: |
