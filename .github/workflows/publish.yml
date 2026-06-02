@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - "v*.*.*"
+  workflow_dispatch:  # allow manual trigger after PyPI trusted publishing is configured
 
 jobs:
   publish:
