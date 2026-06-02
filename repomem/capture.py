@@ -12,7 +12,7 @@ from typing import Optional
 
 from .config import (
     PRIVATE_TAG_START, PRIVATE_TAG_END,
-    OBS_TYPES, TOPIC_KEYWORDS, KNOWN_FOLDERS
+    OBS_TYPES, TOPIC_KEYWORDS, KNOWN_FOLDERS, SHORT_TOPIC_KEYWORDS
 )
 from .models import Session, Observation, Decision, Pending, Pattern
 from . import db
@@ -77,7 +77,15 @@ def detect_topic(text: str) -> str:
     text_lower = text.lower()
     scores: dict[str, int] = {}
     for topic, keywords in TOPIC_KEYWORDS.items():
-        score = sum(1 for kw in keywords if kw in text_lower)
+        score = 0
+        for kw in keywords:
+            if kw in SHORT_TOPIC_KEYWORDS:
+                # Word-boundary match to avoid false positives (e.g. "di" in "audio")
+                if re.search(r"\b" + re.escape(kw) + r"\b", text_lower):
+                    score += 1
+            else:
+                if kw in text_lower:
+                    score += 1
         if score > 0:
             scores[topic] = score
     if not scores:
@@ -302,7 +310,16 @@ def _capture_errors(text: str, project: str, session_id: str) -> None:
 # ── Release detection ─────────────────────────────────────────────────────────
 
 _RELEASE_SIGNALS = re.compile(
-    r"(?:released?\s+v?|Play\s*Store\s+(?:upload|submitted?)|merged?\s+PR[:\s]+.*?v?)(\d+\.\d+[\.\d]*)",
+    r"(?:"
+    r"released?\s+v?"
+    r"|uploaded?\s+AAB\s+"
+    r"|versionName\s+"
+    r"|TestFlight\s+build\s+"
+    r"|git\s+tag\s+v"
+    r"|bumped?\s+to\s+"
+    r"|Play\s*Store\s+(?:upload|submitted?)"
+    r"|merged?\s+PR[:\s]+.*?v?"
+    r")(\d+\.\d+[\.\d]*)",
     re.IGNORECASE
 )
 
