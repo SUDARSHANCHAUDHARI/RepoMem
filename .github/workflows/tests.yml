@@ -53,6 +53,8 @@ jobs:
               tree = ast.parse(f.read_text())
               for node in ast.walk(tree):
                   if isinstance(node, (ast.Import, ast.ImportFrom)):
+                      if isinstance(node, ast.ImportFrom) and node.level > 0:
+                          continue  # skip relative imports (from .config import ...)
                       names = [a.name for a in node.names] if isinstance(node, ast.Import) else [node.module or '']
                       for name in names:
                           top = name.split('.')[0]
