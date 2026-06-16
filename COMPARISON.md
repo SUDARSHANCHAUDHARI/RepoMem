@@ -6,7 +6,7 @@ A detailed breakdown of why RepoMem was built instead of using an existing tool.
 
 ## Tools evaluated
 
-> We studied 12 tools and 2 articles before building RepoMem. Full per-tool analysis below.
+> We studied 13 tools and 2 articles before building RepoMem. Full per-tool analysis below.
 > Star counts verified June 2026 — numbers change over time.
 
 | Tool | Stars | Language | Storage | API Key | License |
@@ -24,6 +24,7 @@ A detailed breakdown of why RepoMem was built instead of using an existing tool.
 | [LlamaIndex Memory](https://github.com/run-llama/llama_index) | ~50k | Python/TS | Vector store | Optional | MIT |
 | MindStudio / Milvus | — | Python | Milvus + SQLite | **Yes** (Voyage AI) | — |
 | [claude-code-memory-setup](https://github.com/lucasrosati/claude-code-memory-setup) | ~0 | Python + Bash | Obsidian vault (flat files) | No | MIT |
+| [memanto](https://github.com/moorcheh-ai/memanto) | new | Python | Moorcheh engine (Docker/cloud) | No (local) / **Yes** (cloud) | MIT |
 | **RepoMem** | — | **Python (stdlib only)** | **SQLite + FTS5** | **No** | **MIT** |
 
 *agentmemory keyword search works without API key; semantic search requires an embedding API key.
@@ -100,8 +101,8 @@ A detailed breakdown of why RepoMem was built instead of using an existing tool.
 
 | Feature | claude-mem | Engram | Basic Memory | mem0 | RepoMem |
 |---------|:---------:|:------:|:------------:|:----:|:-------:|
-| MCP server (mid-session queries) | ✅ 4 tools | ✅ 19 tools | ✅ | ❌ | ✅ 7 tools |
-| CLI | ✅ | ✅ | ✅ | ✅ | ✅ 20 commands |
+| MCP server (mid-session queries) | ✅ 4 tools | ✅ 19 tools | ✅ | ❌ | ✅ 8 tools |
+| CLI | ✅ | ✅ | ✅ | ✅ | ✅ 22 commands |
 | Web viewer (local, no signup) | ✅ local | ❌ cloud only | ❌ cloud only | ❌ | ✅ local |
 | Terminal UI (vim keys) | ❌ | ✅ | Partial | ❌ | ✅ |
 | Obsidian vault export | ❌ | Beta | ✅ | ❌ | ✅ vault-aware wikilinks, dynamic tags, patterns/releases/branches |

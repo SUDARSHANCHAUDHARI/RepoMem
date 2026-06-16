@@ -16,6 +16,7 @@ One skill for all memory operations. Detect intent from the user's request and r
 |-----------|--------|
 | "save this", "remember this", "add to memory" | `repomem add` |
 | "did we fix this?", "how did we solve X?", "search memory" | `repomem search` |
+| "why did we…", "what's the decision on…", "answer from memory" | `repomem answer` |
 | "what's pending?", "open tasks", "todo" | `repomem pending` |
 | "add pending", "add task", "remember to do" | `repomem add-pending` |
 | "what decisions?", "architecture decisions" | `repomem decisions` |
@@ -38,6 +39,9 @@ One skill for all memory operations. Detect intent from the user's request and r
 repomem search "<query>"
 repomem search "<query>" --project <name>
 repomem search "<query>" --type bugfix|decision|upgrade|warning|learning|error|pending
+
+# Answer a question (grounded, #id-cited block — no LLM call)
+repomem answer "<question>" [--project <name>] [--limit 8]
 
 # Save observation
 repomem add --type <type> --summary "<text>" [--detail "<detail>"] [--topic <topic>]

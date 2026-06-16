@@ -161,11 +161,12 @@ The skill is **Claude Code-only** — it uses Claude Code's `SKILL.md` format. T
 
 ## MCP tools
 
-When Claude Code connects to RepoMem's MCP server, 7 tools become available mid-session:
+When an MCP client connects to RepoMem's server, 8 tools become available mid-session:
 
 | Tool | Arguments | What it does |
 |------|-----------|-------------|
 | `repomem_search` | `query`, `project?`, `type?`, `limit?` | FTS5 full-text search across all observations |
+| `repomem_answer` | `question`, `project?`, `limit?` | Grounded, #id-cited memory block to answer from — no LLM call |
 | `repomem_save` | `type`, `summary`, `detail?`, `topic?`, `project?` | Persist an observation immediately |
 | `repomem_context` | `project?` | Full project context (decisions + pending + recent obs) |
 | `repomem_pending` | `project?` | List all open tasks |
@@ -194,11 +195,13 @@ RepoMem captures 8 structured types automatically from session text:
 
 ## Interfaces
 
-### CLI — 20 commands
+### CLI — 22 commands
 
 | Command | Description |
 |---------|-------------|
 | `repomem search <q>` | FTS5 full-text search, optional `--project`, `--type`, `--limit` |
+| `repomem answer <q>` | Grounded, #id-cited memory block for a question (no LLM call) |
+| `repomem mcp-config -c <client>` | Print MCP config snippet for claude/cursor/windsurf/cline/codex |
 | `repomem add` | Manually add an observation (`--type`, `--summary`, `--detail`) |
 | `repomem pending` | List open tasks, optional `--project` |
 | `repomem add-pending <task>` | Add a task with `--priority P1/P2/P3` |
@@ -331,7 +334,7 @@ Short summary — see [COMPARISON.md](COMPARISON.md) for 5 detailed comparison t
 | Sleep-time reflection | ❌ | ❌ | ❌ | ❌ | ✅ nightly |
 | Conflict detection | ❌ | Beta (needs LLM) | ❌ | ❌ | ✅ autonomous |
 | Error tracking | ❌ | ❌ | ❌ | ❌ | ✅ |
-| MCP server | ✅ 4 tools | ✅ 19 tools | ✅ | ❌ | ✅ 7 tools |
+| MCP server | ✅ 4 tools | ✅ 19 tools | ✅ | ❌ | ✅ 8 tools |
 | Web viewer (local, no signup) | ✅ local | ❌ cloud only | ❌ cloud only | ❌ | ✅ local |
 | Terminal UI | ❌ | ✅ | Partial | ❌ | ✅ |
 | Obsidian sync | ❌ | Beta | ✅ | ❌ | ✅ |
@@ -340,6 +343,37 @@ Short summary — see [COMPARISON.md](COMPARISON.md) for 5 detailed comparison t
 | Private content tagging | ✅ `<private>` | ❌ | ❌ | ❌ | ✅ `<private>` |
 | Fully auditable (no binary) | ❌ compiled JS | ❌ Go binary | ✅ | ✅ | ✅ |
 | License | Apache 2 | MIT | **AGPL** | Apache 2 | **MIT** |
+
+### memanto — the closest philosophical opposite
+
+[memanto](https://github.com/moorcheh-ai/memanto) (Moorcheh AI, [paper](https://arxiv.org/abs/2604.22085))
+is a research-backed competitor worth contrasting directly, because it makes the *opposite*
+design bet at almost every turn.
+
+| | [memanto](https://github.com/moorcheh-ai/memanto) | **RepoMem** |
+|---|:---:|:---:|
+| Retrieval | Semantic — proprietary Moorcheh engine | Lexical — SQLite FTS5 |
+| Zero dependencies | ❌ Docker + Ollama (local) or cloud | ✅ stdlib only |
+| Zero API keys | Local only (cloud needs key) | ✅ always |
+| Memory model | **Queryable** — "not injectable" by design | **Auto-injected** at SessionStart |
+| `answer` (grounded QA) | ✅ LLM-generated | ✅ agent-grounded, no LLM call |
+| Typed observations | ✅ 13 categories | ✅ 8 dev-focused types |
+| Conflict detection | ✅ | ✅ |
+| Document ingestion | ✅ pdf/docx/xlsx/csv | Markdown session import only |
+| Research + benchmarks | ✅ LongMemEval 89.8%, LoCoMo 87.1% | ❌ |
+| Fully auditable | Partial — Moorcheh engine is proprietary | ✅ read every line |
+| License | MIT | MIT |
+
+**The honest tradeoff.** memanto wins on retrieval *quality*: its information-theoretic engine
+matches "the auth thing" to "OAuth token refresh" where FTS5 needs shared keywords. It also has
+a paper and benchmark numbers RepoMem can't claim. RepoMem wins on *footprint and trust*:
+nothing to run — no Docker daemon, no Ollama model pull, no engine you can't read. Just
+`python3` and a SQLite file, fully air-gapped. memanto is built to be **asked**; RepoMem is
+built to **show up automatically** at session start. Pick the bet that fits how you work.
+
+> Cells above are drawn from memanto's README and paper, not from running it — a few of its
+> capabilities (Stop-hook capture, per-project scoping, MCP specifics) were left out rather
+> than guessed.
 
 ---
 
