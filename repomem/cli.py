@@ -27,6 +27,39 @@ def cmd_search(args) -> None:
     print(format_results(results, verbose=args.verbose))
 
 
+# MCP clients that speak the standard stdio transport RepoMem's server implements.
+# All wrap the same server entry under an "mcpServers" object; only the config
+# file location differs.
+MCP_CLIENTS = {
+    "claude":   "~/.claude/settings.json  (or <project>/.mcp.json)",
+    "cursor":   "~/.cursor/mcp.json  (or <project>/.cursor/mcp.json)",
+    "windsurf": "~/.codeium/windsurf/mcp_config.json",
+    "cline":    "VS Code → Cline → MCP Servers → Configure (cline_mcp_settings.json)",
+    "codex":    "~/.codex/config.toml  (see Codex MCP docs; same command/args)",
+}
+
+
+def cmd_mcp_config(args) -> None:
+    """Print the MCP server config snippet for a given client."""
+    import json
+    lib = os.environ.get("REPOMEM_INSTALL", os.path.expanduser("~/.repomem/lib"))
+    server_entry = {
+        "command": sys.executable,
+        "args": [os.path.join(lib, "server", "mcp_server.py")],
+        "env": {"REPOMEM_INSTALL": lib},
+    }
+    location = MCP_CLIENTS[args.client]
+    print(f"# {args.client}: add this under \"mcpServers\" in {location}\n")
+    print(json.dumps({"repomem": server_entry}, indent=2))
+
+
+def cmd_answer(args) -> None:
+    """Build a grounded, #id-cited memory block for a question."""
+    from .answer import answer
+    project = args.project or detect_project()[0]
+    print(answer(args.question, project=project, limit=args.limit))
+
+
 def _ensure_manual_session(project: str) -> None:
     """Ensure a 'manual' sentinel session exists for CLI-sourced observations."""
     import time as _t
@@ -482,6 +515,17 @@ def main() -> None:
     p_search.add_argument("--limit", "-l", type=int, default=20)
     p_search.add_argument("--verbose", "-v", action="store_true")
 
+    # answer
+    p_answer = sub.add_parser("answer", help="Grounded, #id-cited memory block for a question")
+    p_answer.add_argument("question")
+    p_answer.add_argument("--project", "-p")
+    p_answer.add_argument("--limit", "-l", type=int, default=8)
+
+    # mcp-config
+    p_mcp = sub.add_parser("mcp-config", help="Print MCP server config snippet for an agent")
+    p_mcp.add_argument("--client", "-c", required=True, choices=sorted(MCP_CLIENTS),
+                       help="Target MCP client")
+
     # add
     p_add = sub.add_parser("add", help="Add an observation")
     p_add.add_argument("--type", "-t", required=True, choices=OBS_TYPES)
@@ -584,6 +628,8 @@ def main() -> None:
 
     commands = {
         "search": cmd_search,
+        "answer": cmd_answer,
+        "mcp-config": cmd_mcp_config,
         "tui": cmd_tui,
         "server": cmd_server,
         "graphify": cmd_graphify,

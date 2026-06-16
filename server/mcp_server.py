@@ -119,6 +119,19 @@ TOOLS = [
         },
     },
     {
+        "name": "repomem_answer",
+        "description": "Answer a question from RepoMem memory. Returns a compact, #id-cited grounding block (observations, decisions, unresolved errors) to answer from — no LLM call, no API key. Use when the user asks 'did we…', 'why did we…', 'what's the decision on…'.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "question": {"type": "string", "description": "The question to ground in memory"},
+                "project":  {"type": "string", "description": "Project name (optional, auto-detected)"},
+                "limit":    {"type": "integer", "description": "Max observations to include (default 8)"},
+            },
+            "required": ["question"],
+        },
+    },
+    {
         "name": "repomem_save",
         "description": "Save an observation to RepoMem memory. Use this to persist important facts, decisions, bugs, or learnings from the current session.",
         "inputSchema": {
@@ -212,6 +225,16 @@ def handle_repomem_search(args: dict) -> dict:
         lines.append("")
 
     return {"content": [{"type": "text", "text": "\n".join(lines)}]}
+
+
+def handle_repomem_answer(args: dict) -> dict:
+    from repomem.answer import answer
+    from repomem.capture import detect_project
+    project = args.get("project")
+    if not project:
+        project, _, _ = detect_project()
+    block = answer(args["question"], project=project, limit=args.get("limit", 8))
+    return {"content": [{"type": "text", "text": block}]}
 
 
 def _ensure_mcp_session(session_id: str, project: str, folder: str) -> None:
@@ -318,6 +341,7 @@ def handle_repomem_resolve(args: dict) -> dict:
 
 HANDLERS = {
     "repomem_search":      handle_repomem_search,
+    "repomem_answer":      handle_repomem_answer,
     "repomem_save":        handle_repomem_save,
     "repomem_context":     handle_repomem_context,
     "repomem_pending":     handle_repomem_pending,

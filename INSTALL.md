@@ -50,7 +50,7 @@ source ~/.zshrc
 
 1. **Restart Claude Code** — hooks activate on next launch
 2. Verify: run `repomem status` in terminal
-3. Verify MCP: in Claude Code, ask "what repomem tools do you have?" — Claude should list 7 tools
+3. Verify MCP: in Claude Code, ask "what repomem tools do you have?" — Claude should list 8 tools
 
 **Manual wiring** (if `install.sh` couldn't find `settings.json`):
 

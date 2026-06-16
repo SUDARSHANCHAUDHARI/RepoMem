@@ -20,9 +20,10 @@ repomem/
   capture.py     ← extracts observations, entities, errors, releases, branch tracking
   inject.py      ← builds context injection (2000 char cap, 8-section priority order)
   search.py      ← FTS5 + LIKE fallback search
-  cli.py         ← 20 commands: search, add, pending, decisions, status, doctor,
-                    entities, releases, branches, merge-branch, sync, obsidian, graphify,
-                    tui, server, resolve-error, import-chat
+  answer.py      ← grounded #id-cited retrieval (no LLM call) for question answering
+  cli.py         ← 22 commands: search, answer, mcp-config, add, pending, decisions,
+                    status, doctor, entities, releases, branches, merge-branch, sync,
+                    obsidian, graphify, tui, server, resolve-error, import-chat
   utils.py       ← shared text_similarity() utility (used by reflect + defrag)
   entity.py      ← PascalCase/file/library entity extraction + obs linking
   obsidian.py    ← export to Obsidian vault as wikilinked Markdown
@@ -33,7 +34,7 @@ hooks/
   memory-capture.py  ← Stop hook (writes to DB at session end)
   memory-inject.py   ← SessionStart hook (reads from DB at session start)
 server/
-  mcp_server.py  ← stdio JSON-RPC MCP server (7 tools)
+  mcp_server.py  ← stdio JSON-RPC MCP server (8 tools)
   web_viewer.py  ← stdlib http.server web UI (dark mode, port 39000)
 skills/
   repomem/           ← /repomem Claude Code skill (all memory operations)

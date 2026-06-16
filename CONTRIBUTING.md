@@ -87,7 +87,7 @@ RepoMem/
 │   └── __main__.py           # Enables `python3 -m repomem`
 │
 ├── server/
-│   ├── mcp_server.py         # MCP server — stdio JSON-RPC, 7 tools
+│   ├── mcp_server.py         # MCP server — stdio JSON-RPC, 8 tools
 │   └── web_viewer.py         # Web UI — stdlib http.server, dark mode, port 39000
 │
 ├── hooks/
