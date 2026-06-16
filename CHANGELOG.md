@@ -8,6 +8,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ## [Unreleased]
 
+---
+
+## [0.3.0] — 2026-06-16
+
 ### Added
 - `answer` primitive — `repomem answer "<question>"` and the `repomem_answer` MCP tool return a grounded, #id-cited block (observations + relevant decisions + unresolved errors) for the host agent to answer from. No LLM call, no API key. ([repomem/answer.py](repomem/answer.py))
 - `repomem mcp-config --client <claude|cursor|windsurf|cline|codex>` prints the MCP server config snippet — the stdio server already works with any MCP client, this makes it discoverable
