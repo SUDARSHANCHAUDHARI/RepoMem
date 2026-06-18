@@ -40,6 +40,8 @@ Restart Claude Code. Done.
 
 **Requirements:** Python 3.11+ · No other dependencies (stdlib only)
 
+> **Optional semantic search** — for embedding-based retrieval that matches meaning over keywords, install the extra: `pip install repomem[semantic]`, then add `--semantic` to any `repomem search`. This is fully opt-in; the default install stays zero-dependency and FTS5 is always the fallback.
+
 `install.sh` handles everything automatically:
 
 | Step | What happens |
@@ -199,7 +201,7 @@ RepoMem captures 8 structured types automatically from session text:
 
 | Command | Description |
 |---------|-------------|
-| `repomem search <q>` | FTS5 full-text search, optional `--project`, `--type`, `--limit` |
+| `repomem search <q>` | FTS5 full-text search, optional `--project`, `--type`, `--limit`, `--semantic` |
 | `repomem answer <q>` | Grounded, #id-cited memory block for a question (no LLM call) |
 | `repomem mcp-config -c <client>` | Print MCP config snippet for claude/cursor/windsurf/cline/codex |
 | `repomem add` | Manually add an observation (`--type`, `--summary`, `--detail`) |

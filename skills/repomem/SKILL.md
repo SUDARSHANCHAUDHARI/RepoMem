@@ -39,6 +39,7 @@ One skill for all memory operations. Detect intent from the user's request and r
 repomem search "<query>"
 repomem search "<query>" --project <name>
 repomem search "<query>" --type bugfix|decision|upgrade|warning|learning|error|pending
+repomem search "<query>" --semantic   # embedding search; needs `pip install repomem[semantic]`
 
 # Answer a question (grounded, #id-cited block — no LLM call)
 repomem answer "<question>" [--project <name>] [--limit 8]

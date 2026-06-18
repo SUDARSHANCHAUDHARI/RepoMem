@@ -8,6 +8,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ## [Unreleased]
 
+### Added
+- **Optional semantic search** — `repomem search <q> --semantic` ranks observations by embedding cosine similarity. Fully opt-in via `pip install repomem[semantic]`; the default install stays zero-dependency and FTS5 is always the fallback (with a hint if the extra is missing). Embeddings live in their own `embeddings` table created on demand — core schema untouched. ([repomem/semantic.py](repomem/semantic.py))
+
 ---
 
 ## [0.3.0] — 2026-06-16
