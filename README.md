@@ -40,7 +40,7 @@ Restart Claude Code. Done.
 
 **Requirements:** Python 3.11+ · No other dependencies (stdlib only)
 
-> **Optional semantic search** — for embedding-based retrieval that matches meaning over keywords, install the extra: `pip install repomem[semantic]`, then add `--semantic` to any `repomem search`. This is fully opt-in; the default install stays zero-dependency and FTS5 is always the fallback. See [bench/](bench/) for the retrieval benchmark harness.
+> **Optional semantic search** — for embedding-based retrieval that matches meaning over keywords, install the extra: `pip install repomem[semantic]`, then add `--semantic` to any `repomem search`. This is fully opt-in; the default install stays zero-dependency and FTS5 is always the fallback.
 
 `install.sh` handles everything automatically:
 
