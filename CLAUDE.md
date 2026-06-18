@@ -19,7 +19,8 @@ repomem/
   db.py          ← SQLite schema v3 + FTS5 triggers + CRUD + migrations
   capture.py     ← extracts observations, entities, errors, releases, branch tracking
   inject.py      ← builds context injection (2000 char cap, 8-section priority order)
-  search.py      ← FTS5 + LIKE fallback search
+  search.py      ← FTS5 + LIKE fallback search (+ optional --semantic routing)
+  semantic.py    ← OPTIONAL embedding search (repomem[semantic] extra); own embeddings table, lazy import, FTS5 fallback
   answer.py      ← grounded #id-cited retrieval (no LLM call) for question answering
   cli.py         ← 22 commands: search, answer, mcp-config, add, pending, decisions,
                     status, doctor, entities, releases, branches, merge-branch, sync,

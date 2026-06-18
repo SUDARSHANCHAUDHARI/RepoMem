@@ -8,11 +8,28 @@ from .models import SearchResult
 
 
 def search(query: str, project: Optional[str] = None,
-           obs_type: Optional[str] = None, limit: int = 20) -> list[SearchResult]:
+           obs_type: Optional[str] = None, limit: int = 20,
+           semantic: bool = False) -> list[SearchResult]:
     """
-    Search observations using FTS5.
-    Falls back to LIKE search if FTS5 fails.
+    Search observations using FTS5 (default), or semantic embeddings when
+    `semantic=True` and the optional extra is installed.
+
+    Falls back to LIKE search if FTS5 fails. If `semantic` is requested but the
+    `repomem[semantic]` extra is missing, prints a hint and uses FTS5 instead —
+    the zero-dependency default path is always available.
     """
+    if semantic:
+        from . import semantic as _sem
+        if _sem.is_available():
+            try:
+                return _sem.semantic_search(query, project=project,
+                                            obs_type=obs_type, limit=limit)
+            except Exception:
+                pass  # fall through to FTS5 on any embedding error
+        else:
+            import sys
+            print("ⓘ semantic search needs `pip install repomem[semantic]` — "
+                  "falling back to FTS5.", file=sys.stderr)
     try:
         results = db.search_observations(query, project=project, limit=limit)
         if obs_type:

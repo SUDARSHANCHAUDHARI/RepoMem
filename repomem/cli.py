@@ -22,7 +22,8 @@ def cmd_search(args) -> None:
         args.query,
         project=args.project or None,
         obs_type=args.type or None,
-        limit=args.limit
+        limit=args.limit,
+        semantic=getattr(args, "semantic", False),
     )
     print(format_results(results, verbose=args.verbose))
 
@@ -514,6 +515,8 @@ def main() -> None:
     p_search.add_argument("--type", "-t", choices=OBS_TYPES)
     p_search.add_argument("--limit", "-l", type=int, default=20)
     p_search.add_argument("--verbose", "-v", action="store_true")
+    p_search.add_argument("--semantic", action="store_true",
+                          help="Use embedding search (needs `pip install repomem[semantic]`)")
 
     # answer
     p_answer = sub.add_parser("answer", help="Grounded, #id-cited memory block for a question")

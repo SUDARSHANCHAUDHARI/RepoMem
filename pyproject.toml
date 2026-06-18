@@ -20,7 +20,11 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
 ]
 requires-python = ">=3.11"
-dependencies = []   # stdlib only
+dependencies = []   # stdlib only — the default install stays zero-dependency
+
+[project.optional-dependencies]
+# Opt-in semantic search. Never pulled by the default `pip install repomem`.
+semantic = ["sentence-transformers>=2.2"]
 
 [project.scripts]
 repomem = "repomem.cli:main"
