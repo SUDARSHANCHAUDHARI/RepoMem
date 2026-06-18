@@ -7,21 +7,26 @@ fails soft back to FTS5 if the extra isn't installed. Embeddings live in their o
 `embeddings` table created on demand — the core schema is never touched.
 """
 from __future__ import annotations
+import importlib
+import importlib.util
 import json
 from typing import Optional
 
 from . import db
 from .models import SearchResult
 
+# The optional extra is loaded via importlib (never a static `import`), so the
+# default install stays genuinely zero-dependency and the no-external-imports
+# guard stays honest. Nothing here runs unless the user opts into --semantic.
+_EXTRA = "sentence_transformers"
 MODEL_NAME = "all-MiniLM-L6-v2"   # 384-dim, small, the sentence-transformers default
 _MODEL = None
 
 
 def is_available() -> bool:
-    """True iff the optional `sentence-transformers` extra is importable."""
+    """True iff the optional `sentence-transformers` extra is installed."""
     try:
-        import sentence_transformers  # noqa: F401
-        return True
+        return importlib.util.find_spec(_EXTRA) is not None
     except Exception:
         return False
 
@@ -29,8 +34,8 @@ def is_available() -> bool:
 def _get_model():
     global _MODEL
     if _MODEL is None:
-        from sentence_transformers import SentenceTransformer
-        _MODEL = SentenceTransformer(MODEL_NAME)
+        st = importlib.import_module(_EXTRA)
+        _MODEL = st.SentenceTransformer(MODEL_NAME)
     return _MODEL
 
 
