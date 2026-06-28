@@ -128,30 +128,60 @@ def extract_observations_from_text(text: str, project: str,
 
     seen_summaries: set[str] = set()
 
+    def _add(obs_type: str, summary: str, min_len: int = 10) -> None:
+        summary = re.sub(r"\s+", " ", summary.strip())
+        if len(summary) < min_len:
+            return
+        if summary.lower() in seen_summaries:
+            return
+        seen_summaries.add(summary.lower())
+        observations.append(Observation(
+            session_id=session_id,
+            project=project,
+            folder=folder,
+            type=obs_type,
+            topic=detect_topic(summary),
+            summary=summary[:200],
+            detail="",
+            date=today,
+            created_at=int(_time.time()),
+        ))
+
+    # Conventional commits: "type(scope)!: subject" — the dominant format in
+    # this portfolio. Maps Angular/conventional types to observation types.
+    # docs/test/ci/build/style are low-signal and skipped.
+    conv_type_map = {
+        "feat": "decision", "fix": "bugfix", "perf": "upgrade",
+        "refactor": "decision", "revert": "warning",
+    }
+    conv_re = re.compile(
+        r"^\s*(?:[-*]\s*)?(feat|fix|perf|refactor|revert|chore|build|ci|docs|test|style)"
+        r"(?:\(([^)]+)\))?(!)?:\s+(.+?)\s*$",
+        re.IGNORECASE,
+    )
+    for line in text.splitlines():
+        m = conv_re.match(line)
+        if not m:
+            continue
+        ctype, scope, breaking, subject = m.group(1).lower(), m.group(2), m.group(3), m.group(4)
+        if ctype == "chore":
+            if not re.search(r"\b(bump|updat|upgrad|dep|deps|version|migrat)\w*", subject, re.IGNORECASE):
+                continue
+            obs_type = "upgrade"
+        elif ctype in conv_type_map:
+            obs_type = conv_type_map[ctype]
+        else:
+            continue  # docs/test/ci/build/style
+        if breaking:
+            obs_type = "warning"  # breaking change is a caution
+        subject = re.sub(r"\s*\(#\d+\)\s*$", "", subject)  # drop trailing PR/issue ref
+        summary = f"{scope}: {subject}" if scope else subject
+        _add(obs_type, summary, min_len=6)
+
+    # Prose patterns (free-form session text / commit bodies).
     for pattern, obs_type in patterns:
         for match in re.finditer(pattern, text, re.IGNORECASE):
-            summary = match.group(1).strip()
-            summary = re.sub(r"\s+", " ", summary)  # normalize whitespace
-            if len(summary) < 10:
-                continue
-            if summary.lower() in seen_summaries:
-                continue
-            seen_summaries.add(summary.lower())
-
-            topic = detect_topic(summary)
-
-            obs = Observation(
-                session_id=session_id,
-                project=project,
-                folder=folder,
-                type=obs_type,
-                topic=topic,
-                summary=summary[:200],  # cap summary length
-                detail="",
-                date=today,
-                created_at=int(_time.time()),
-            )
-            observations.append(obs)
+            _add(obs_type, match.group(1))
 
     return observations
 
