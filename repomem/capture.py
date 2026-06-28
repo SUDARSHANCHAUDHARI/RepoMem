@@ -198,6 +198,19 @@ def capture_session(session_summary: str, session_id: Optional[str] = None,
 
     project, folder, repo_path = detect_project()
 
+    # Guard: only record real git repos with a remote. Running from a category
+    # folder or the monorepo root has no remote, so detect_project() would fall
+    # back to the directory name and invent a bogus "project" (AIProjects,
+    # sudarshan_repos, ...). Skip those unless REPOMEM_PROJECT is set explicitly.
+    if not os.environ.get("REPOMEM_PROJECT"):
+        try:
+            subprocess.check_output(
+                ["git", "remote", "get-url", "origin"],
+                stderr=subprocess.DEVNULL, cwd=repo_path,
+            )
+        except Exception:
+            return 0
+
     # Create/update session
     if not session_id:
         from datetime import datetime
