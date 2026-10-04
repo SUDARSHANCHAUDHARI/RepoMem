@@ -49,3 +49,5 @@ credentials.*
 
 # Graphify knowledge graph output (local only)
 graphify-out/
+
+repoguard-results/
