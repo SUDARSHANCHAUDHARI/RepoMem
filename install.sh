@@ -166,8 +166,15 @@ echo "Adding cron jobs..."
 CRON_REFLECT="0 2 * * * REPOMEM_INSTALL=$REPOMEM_DIR/lib $PYTHON3_PATH $REPOMEM_DIR/crons/reflect.py >> $REPOMEM_DIR/logs/reflect.log 2>&1"
 CRON_DEFRAG="0 3 * * 0 REPOMEM_INSTALL=$REPOMEM_DIR/lib $PYTHON3_PATH $REPOMEM_DIR/crons/defrag.py >> $REPOMEM_DIR/logs/defrag.log 2>&1"
 
-(crontab -l 2>/dev/null | grep -v "repomem"; echo "$CRON_REFLECT"; echo "$CRON_DEFRAG") | crontab -
-echo -e "  ${GREEN}✅ Cron jobs: reflect (2am daily), defrag (Sunday 3am)${NC}"
+# Managed sentinel block only — see scripts/repomem-crontab.sh. A plain
+# `grep -v "repomem"` here used to delete every crontab line containing that
+# word, including jobs this installer never created.
+export CRON_REFLECT CRON_DEFRAG
+if bash "$SCRIPT_DIR/scripts/repomem-crontab.sh"; then
+    echo -e "  ${GREEN}✅ Cron jobs: reflect (2am daily), defrag (Sunday 3am)${NC}"
+else
+    echo -e "  ${YELLOW}⚠️  Cron jobs skipped — your crontab was left unchanged (see above)${NC}"
+fi
 
 # ── Initialize DB ──────────────────────────────────────────────────────────────
 echo "Initializing database..."
