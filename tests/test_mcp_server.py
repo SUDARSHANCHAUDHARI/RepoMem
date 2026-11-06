@@ -62,6 +62,8 @@ def test_initialize():
     assert result["protocolVersion"] == "2024-11-05"
     assert "tools" in result["capabilities"]
     assert result["serverInfo"]["name"] == "repomem"
+    from repomem import __version__
+    assert result["serverInfo"]["version"] == __version__
 
 
 def test_tools_list():

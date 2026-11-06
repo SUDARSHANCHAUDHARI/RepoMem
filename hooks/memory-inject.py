@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-RepoMem SessionStart hook — injects project memory as system message.
+RepoMem SessionStart hook — injects project memory as additionalContext.
 Wired as a SessionStart hook in ~/.claude/settings.json.
 Never blocks — exits 0 always, returns empty {} on any error.
 """

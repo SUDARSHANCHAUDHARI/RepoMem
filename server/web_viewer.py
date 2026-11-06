@@ -21,6 +21,14 @@ if REPOMEM_INSTALL not in sys.path:
 
 PORT = int(os.environ.get("REPOMEM_PORT", 39000))
 
+ALLOWED_HOSTS = {"127.0.0.1", "localhost"}
+
+
+def _host_allowed(host: str | None) -> bool:
+    """Accept only 127.0.0.1 or localhost, with an optional numeric port (blocks DNS rebinding)."""
+    name, sep, port = (host or "").strip().lower().partition(":")
+    return name in ALLOWED_HOSTS and (not sep or port.isdigit())
+
 # ── CSS / JS (inlined) ────────────────────────────────────────────────────────
 
 CSS = """
@@ -103,7 +111,7 @@ def _page(title: str, body: str, active: str = "") -> str:
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>{title} — RepoMem</title>
+<title>{_esc(title)} — RepoMem</title>
 <style>{CSS}</style>
 </head>
 <body>
@@ -124,10 +132,12 @@ def _page(title: str, body: str, active: str = "") -> str:
 
 
 def _badge(obs_type: str) -> str:
+    obs_type = _esc(obs_type)
     return f'<span class="badge badge-{obs_type}">{obs_type}</span>'
 
 
 def _priority_badge(priority: str) -> str:
+    priority = _esc(priority)
     return f'<span class="badge badge-{priority.lower()}">{priority}</span>'
 
 
@@ -238,7 +248,7 @@ def page_observations(project: str = "", query: str = "") -> str:
         </tr>""" for o in obs)
 
     body = f"""
-    <h2 class="section-title">{title} ({len(obs)})</h2>
+    <h2 class="section-title">{_esc(title)} ({len(obs)})</h2>
     <table>
       <thead><tr><th>Type</th><th>Project</th><th>Topic</th><th>Summary</th><th>Date</th></tr></thead>
       <tbody>{rows_html or '<tr><td colspan="5" class="empty">No observations.</td></tr>'}</tbody>
@@ -368,6 +378,9 @@ class RepoMemHandler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def do_GET(self):
+        if not _host_allowed(self.headers.get("Host")):
+            self._send_html("<h1>403 Forbidden</h1>", 403)
+            return
         parsed = urllib.parse.urlparse(self.path)
         path = parsed.path
         params = dict(urllib.parse.parse_qsl(parsed.query))

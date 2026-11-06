@@ -212,8 +212,8 @@ def build_context(project: Optional[str] = None) -> str:
 
 
 def build_system_message(project: Optional[str] = None) -> dict:
-    """Return JSON for SessionStart hook systemMessage."""
+    """Return JSON for the SessionStart hook: context goes to the model via additionalContext."""
     context = build_context(project)
     if not context:
         return {}
-    return {"systemMessage": context}
+    return {"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": context}}

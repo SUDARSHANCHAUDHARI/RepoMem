@@ -107,3 +107,11 @@ def test_stats():
     assert "observations" in stats
     assert "sessions" in stats
     assert "projects" in stats
+
+
+def test_connection_sets_busy_timeout():
+    conn = db.get_connection()
+    try:
+        assert conn.execute("PRAGMA busy_timeout").fetchone()[0] == 5000
+    finally:
+        conn.close()
