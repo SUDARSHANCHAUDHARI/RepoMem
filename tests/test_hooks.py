@@ -63,10 +63,7 @@ class TestMemoryCapture:
 
     def test_extracts_session_id_from_payload(self, monkeypatch, tmp_path):
         mod = load_hook("memory-capture.py")
-        payload = json.dumps({
-            "session_id": "abc123",
-            "summary": "fixed null pointer in UserRepo"
-        })
+        payload = json.dumps({"session_id": "abc123"})
         monkeypatch.setattr("sys.stdin", MagicMock(read=lambda: payload))
         captured_args = {}
 
@@ -85,20 +82,21 @@ class TestMemoryCapture:
         assert exc.value.code == 0
         assert captured_args.get("session_id") == "abc123"
 
-    def test_handles_list_content_blocks(self, monkeypatch):
+    def _run_with_transcript(self, monkeypatch, transcript_path):
         mod = load_hook("memory-capture.py")
         payload = json.dumps({
             "session_id": "xyz",
-            "summary": [
-                {"type": "text", "text": "Fixed the crash."},
-                {"type": "text", "text": " Added null check."},
-            ]
+            "transcript_path": str(transcript_path),
+            "cwd": "/tmp",
+            "hook_event_name": "Stop",
+            "stop_hook_active": False,
         })
         monkeypatch.setattr("sys.stdin", MagicMock(read=lambda: payload))
         captured = {}
 
         def fake_capture(session_summary, session_id=None):
             captured["summary"] = session_summary
+            captured["session_id"] = session_id
             return 0
 
         mock_module = MagicMock()
@@ -106,9 +104,51 @@ class TestMemoryCapture:
         mock_module.detect_project = MagicMock(return_value=("P", "/tmp", ""))
 
         with patch.dict("sys.modules", {"repomem.capture": mock_module}):
-            with pytest.raises(SystemExit):
+            with pytest.raises(SystemExit) as exc:
                 mod.main()
-        assert "Fixed the crash." in captured.get("summary", "")
+        assert exc.value.code == 0
+        return captured
+
+    def test_reads_summary_from_transcript(self, monkeypatch, tmp_path):
+        transcript = tmp_path / "session.jsonl"
+        lines = [
+            {"type": "user", "message": {"role": "user", "content": "Fix the crash in UserRepo"}},
+            {"type": "assistant", "message": {"role": "assistant", "content": [
+                {"type": "text", "text": "Looking."},
+                {"type": "tool_use", "name": "Read", "input": {}},
+            ]}},
+            {"type": "user", "message": {"role": "user", "content": [
+                {"type": "tool_result", "content": "file body"},
+            ]}},
+            {"type": "assistant", "message": {"role": "assistant", "content": [
+                {"type": "text", "text": "Fixed the crash."},
+                {"type": "text", "text": "Added null check."},
+            ]}},
+        ]
+        transcript.write_text(
+            "\n".join(json.dumps(l) for l in lines) + "\nnot json\n", encoding="utf-8"
+        )
+        captured = self._run_with_transcript(monkeypatch, transcript)
+        summary = captured["summary"]
+        assert captured["session_id"] == "xyz"
+        assert "User: Fix the crash in UserRepo" in summary
+        assert "Assistant: Fixed the crash. Added null check." in summary
+        assert "Looking." not in summary
+        assert "file body" not in summary
+
+    def test_truncates_long_transcript_text(self, monkeypatch, tmp_path):
+        mod = load_hook("memory-capture.py")
+        transcript = tmp_path / "long.jsonl"
+        transcript.write_text(json.dumps(
+            {"type": "user", "message": {"role": "user", "content": "x" * 5000}}
+        ), encoding="utf-8")
+        summary = mod.summarize_transcript(str(transcript))
+        assert summary == "User: " + "x" * mod.MAX_PART
+
+    def test_missing_transcript_still_captures_and_exits_0(self, monkeypatch, tmp_path):
+        captured = self._run_with_transcript(monkeypatch, tmp_path / "does-not-exist.jsonl")
+        assert captured["session_id"] == "xyz"
+        assert captured["summary"] == "Session ended (no transcript text)."
 
 
 # ── memory-inject.py ─────────────────────────────────────────────────────────

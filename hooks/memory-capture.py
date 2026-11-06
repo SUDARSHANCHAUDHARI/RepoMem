@@ -18,6 +18,55 @@ if REPOMEM_INSTALL not in sys.path:
     sys.path.insert(0, REPOMEM_INSTALL)
 
 
+MAX_PART = 1000  # chars kept from each of the first prompt and the last reply
+
+
+def _text_of(content) -> str:
+    """Text of a message content: a string, or a list of blocks with type "text"."""
+    if isinstance(content, str):
+        return content.strip()
+    if isinstance(content, list):
+        return " ".join(
+            block.get("text", "") for block in content
+            if isinstance(block, dict) and block.get("type") == "text"
+        ).strip()
+    return ""
+
+
+def summarize_transcript(path: str) -> str:
+    """First user prompt + last assistant text from a Claude Code JSONL transcript.
+    Returns "" when the file is missing, unreadable or has no text."""
+    first_user = last_assistant = ""
+    try:
+        with open(os.path.expanduser(path), encoding="utf-8", errors="replace") as f:
+            for line in f:
+                try:
+                    entry = json.loads(line)
+                except ValueError:
+                    continue
+                if not isinstance(entry, dict):
+                    continue
+                msg = entry.get("message")
+                if not isinstance(msg, dict):
+                    continue
+                role = msg.get("role") or entry.get("type")
+                text = _text_of(msg.get("content"))
+                if not text:
+                    continue
+                if role == "user" and not first_user:
+                    first_user = text
+                elif role == "assistant":
+                    last_assistant = text
+    except (OSError, TypeError):
+        return ""
+    parts = []
+    if first_user:
+        parts.append(f"User: {first_user[:MAX_PART]}")
+    if last_assistant:
+        parts.append(f"Assistant: {last_assistant[:MAX_PART]}")
+    return "\n".join(parts)
+
+
 def main():
     try:
         raw = sys.stdin.read()
@@ -26,22 +75,14 @@ def main():
 
         data = json.loads(raw)
 
-        # Extract session summary from Stop hook data
-        # Claude Code Stop hook provides: stop_reason, session_id, etc.
-        session_id = data.get("session_id") or data.get("sessionId") or ""
-        stop_reason = data.get("stop_reason", "")
-
-        # Get any summary from the data
-        summary = data.get("summary") or data.get("message", {}).get("content", "")
-        if isinstance(summary, list):
-            # Extract text from content blocks
-            summary = " ".join(
-                block.get("text", "") for block in summary
-                if isinstance(block, dict) and block.get("type") == "text"
-            )
-
+        # Claude Code Stop hook input: session_id, transcript_path, cwd,
+        # hook_event_name, stop_hook_active. No summary — build it from the transcript.
+        session_id = data.get("session_id") or ""
+        transcript_path = data.get("transcript_path") or ""
+        summary = summarize_transcript(transcript_path) if transcript_path else ""
         if not summary:
-            summary = f"Session ended. Reason: {stop_reason}"
+            # Keep recording the session even when the transcript is missing or empty
+            summary = "Session ended (no transcript text)."
 
         from repomem.capture import capture_session
         count = capture_session(

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 RepoMem MCP server — stdio JSON-RPC 2.0, stdlib only.
-Claude Code wires this as an MCP server in settings.json.
+Claude Code wires this as an MCP server via `claude mcp add` (install.sh).
 
 Protocol: Content-Length framed JSON-RPC over stdin/stdout (same as LSP).
 """
@@ -370,10 +370,11 @@ def handle_request(req: dict) -> None:
         client_version = params.get("protocolVersion", "2024-11-05")
         supported = {"2024-11-05", "2025-03-26"}
         proto = client_version if client_version in supported else "2024-11-05"
+        from repomem import __version__
         ok(req_id, {
             "protocolVersion": proto,
             "capabilities": {"tools": {}},
-            "serverInfo": {"name": "repomem", "version": "0.2.2"},
+            "serverInfo": {"name": "repomem", "version": __version__},
         })
 
     elif method == "tools/list":

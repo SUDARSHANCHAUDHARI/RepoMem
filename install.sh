@@ -4,7 +4,7 @@
 set -euo pipefail
 
 REPOMEM_DIR="${REPOMEM_DIR:-$HOME/.repomem}"
-CLAUDE_DIR="${CLAUDE_DIR:-$HOME/.claude}"
+CLAUDE_DIR="${CLAUDE_DIR:-${CLAUDE_CONFIG_DIR:-$HOME/.claude}}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 GREEN='\033[0;32m'
@@ -111,54 +111,69 @@ if [ -f "$SETTINGS" ]; then
     echo "Wiring Claude Code integration..."
     PYTHON3_PATH_ESC="$PYTHON3_PATH"
     REPOMEM_LIB="$REPOMEM_DIR/lib"
-    $PYTHON3 - "$PYTHON3_PATH_ESC" "$REPOMEM_LIB" "$SETTINGS" <<'PYTHON'
-import json, sys
+    $PYTHON3 - "$PYTHON3_PATH_ESC" "$REPOMEM_LIB" "$SETTINGS" "$CLAUDE_DIR/hooks" <<'PYTHON'
+import json, os, shlex, shutil, sys, tempfile
 
-python3_path, repomem_lib, settings_path = sys.argv[1], sys.argv[2], sys.argv[3]
+python3_path, repomem_lib, settings_path, hooks_dir = sys.argv[1:5]
 
 with open(settings_path) as f:
     settings = json.load(f)
 
 hooks = settings.setdefault("hooks", {})
 
-# Stop hook
-stop_hooks = hooks.setdefault("Stop", [])
-capture_cmd = f"REPOMEM_INSTALL={repomem_lib} {python3_path} ~/.claude/hooks/memory-capture.py"
-if not any(capture_cmd in str(h) for entry in stop_hooks for h in entry.get("hooks", [])):
-    stop_hooks.append({"hooks": [{"type": "command", "command": capture_cmd,
-                                   "timeout": 30, "statusMessage": "RepoMem: saving session memory..."}]})
-    print("  ✅ Stop hook wired")
-else:
-    print("  ⏭️  Stop hook already wired")
 
-# SessionStart hook
-start_hooks = hooks.setdefault("SessionStart", [])
-inject_cmd = f"REPOMEM_INSTALL={repomem_lib} {python3_path} ~/.claude/hooks/memory-inject.py"
-if not any(inject_cmd in str(h) for entry in start_hooks for h in entry.get("hooks", [])):
-    start_hooks.append({"hooks": [{"type": "command", "command": inject_cmd,
-                                    "timeout": 10, "statusMessage": "RepoMem: loading project memory..."}]})
-    print("  ✅ SessionStart hook wired")
-else:
-    print("  ⏭️  SessionStart hook already wired")
+def wire(event, script, timeout, status, label):
+    """Add the hook, or repoint an earlier RepoMem entry for the same script (no duplicates)."""
+    cmd = (f"REPOMEM_INSTALL={shlex.quote(repomem_lib)} {shlex.quote(python3_path)} "
+           f"{shlex.quote(os.path.join(hooks_dir, script))}")
+    entries = hooks.setdefault(event, [])
+    # Only entries in this installer's own format, so hand-made hooks are left alone
+    existing = [h for entry in entries for h in entry.get("hooks", [])
+                if str(h.get("command", "")).startswith("REPOMEM_INSTALL=")
+                and str(h.get("command", "")).rstrip("'\" ").endswith("/hooks/" + script)]
+    if any(h.get("command") == cmd for h in existing):
+        print(f"  ⏭️  {label} hook already wired")
+    elif existing:
+        for h in existing:
+            h["command"] = cmd
+        print(f"  ✅ {label} hook updated")
+    else:
+        entries.append({"hooks": [{"type": "command", "command": cmd,
+                                   "timeout": timeout, "statusMessage": status}]})
+        print(f"  ✅ {label} hook wired")
 
-# MCP server
-mcp_servers = settings.setdefault("mcpServers", {})
-if "repomem" not in mcp_servers:
-    mcp_servers["repomem"] = {
-        "command": python3_path,
-        "args": [f"{repomem_lib}/server/mcp_server.py"],
-        "env": {"REPOMEM_INSTALL": repomem_lib},
-    }
-    print("  ✅ MCP server wired")
-else:
-    print("  ⏭️  MCP server already wired")
 
-with open(settings_path, "w") as f:
-    json.dump(settings, f, indent=2)
+wire("Stop", "memory-capture.py", 30, "RepoMem: saving session memory...", "Stop")
+wire("SessionStart", "memory-inject.py", 10, "RepoMem: loading project memory...", "SessionStart")
+
+# Back up, then write atomically: temp file in the same dir + rename.
+# realpath keeps a symlinked settings.json pointing at its real target.
+target = os.path.realpath(settings_path)
+shutil.copy2(target, target + ".bak")
+fd, tmp = tempfile.mkstemp(dir=os.path.dirname(target), prefix=".settings.", suffix=".tmp")
+try:
+    with os.fdopen(fd, "w") as f:
+        json.dump(settings, f, indent=2)
+    shutil.copymode(target, tmp)
+    os.replace(tmp, target)
+except BaseException:
+    os.unlink(tmp)
+    raise
+print(f"  ✅ settings.json updated (backup: {target}.bak)")
 PYTHON
 else
     echo -e "  ${YELLOW}⚠️  settings.json not found — Claude Code integration skipped${NC}"
     echo "     Set CLAUDE_DIR or run inside a Claude Code project."
+fi
+
+# ── Wire MCP server ────────────────────────────────────────────────────────────
+# Claude Code reads user MCP servers from its own config (managed by `claude mcp`), not settings.json.
+MCP_ADD=(claude mcp add --scope user repomem -e "REPOMEM_INSTALL=$REPOMEM_DIR/lib" -- "$PYTHON3_PATH" "$REPOMEM_DIR/lib/server/mcp_server.py")
+if command -v claude &>/dev/null && "${MCP_ADD[@]}"; then
+    echo -e "  ${GREEN}✅ MCP server wired (user scope)${NC}"
+else
+    echo -e "  ${YELLOW}⚠️  MCP server not wired (claude CLI missing, or repomem already added)${NC}"
+    echo "     Run: $(printf '%q ' "${MCP_ADD[@]}")"
 fi
 
 # ── Add cron jobs ──────────────────────────────────────────────────────────────

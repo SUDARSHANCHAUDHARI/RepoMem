@@ -74,15 +74,13 @@ Add to `~/.claude/settings.json`:
         "statusMessage": "RepoMem: loading project memory..."
       }]
     }]
-  },
-  "mcpServers": {
-    "repomem": {
-      "command": "python3",
-      "args": ["~/.repomem/lib/server/mcp_server.py"],
-      "env": {"REPOMEM_INSTALL": "~/.repomem/lib"}
-    }
   }
 }
+```
+
+Claude Code does not read MCP servers from `settings.json`. Register the server with the CLI:
+```bash
+claude mcp add --scope user repomem -e REPOMEM_INSTALL=$HOME/.repomem/lib -- python3 $HOME/.repomem/lib/server/mcp_server.py
 ```
 
 ### Cursor
@@ -152,8 +150,8 @@ repomem tui           # full-screen terminal UI (press q to quit)
 rm -rf ~/.repomem
 
 # Remove hooks from settings.json (edit manually)
-# Remove cron jobs
-crontab -l | grep -v repomem | crontab -
+# Remove cron jobs (only the lines install.sh tagged)
+crontab -l | grep -v "# repomem-managed" | crontab -
 
 # Remove symlink if created
 rm -f /usr/local/bin/repomem

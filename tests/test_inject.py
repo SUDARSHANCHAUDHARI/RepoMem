@@ -105,3 +105,17 @@ def test_build_context_no_age_label_for_recent():
     assert "Just fixed something today" in ctx
     line = [l for l in ctx.splitlines() if "Just fixed" in l][0]
     assert "ago" not in line
+
+
+def test_build_system_message_uses_session_start_additional_context(monkeypatch):
+    import repomem.inject as inject
+    monkeypatch.setattr(inject, "build_context", lambda project=None: "CTX")
+    assert inject.build_system_message("P") == {
+        "hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": "CTX"}
+    }
+
+
+def test_build_system_message_empty_when_no_context(monkeypatch):
+    import repomem.inject as inject
+    monkeypatch.setattr(inject, "build_context", lambda project=None: "")
+    assert inject.build_system_message("P") == {}

@@ -32,7 +32,7 @@ def cmd_search(args) -> None:
 # All wrap the same server entry under an "mcpServers" object; only the config
 # file location differs.
 MCP_CLIENTS = {
-    "claude":   "~/.claude/settings.json  (or <project>/.mcp.json)",
+    "claude":   "<project>/.mcp.json  (user scope: `claude mcp add --scope user`; not settings.json)",
     "cursor":   "~/.cursor/mcp.json  (or <project>/.cursor/mcp.json)",
     "windsurf": "~/.codeium/windsurf/mcp_config.json",
     "cline":    "VS Code → Cline → MCP Servers → Configure (cline_mcp_settings.json)",

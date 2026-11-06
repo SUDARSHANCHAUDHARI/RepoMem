@@ -134,3 +134,52 @@ def test_badge_helper():
     badge = viewer._badge("bugfix")
     assert "bugfix" in badge
     assert "badge" in badge
+
+
+XSS = "<script>alert(1)</script>"
+
+
+def test_observations_title_is_escaped():
+    viewer = get_viewer()
+    html = viewer.page_observations(project=XSS)
+    assert XSS not in html
+    assert "&lt;script&gt;alert(1)&lt;/script&gt;" in html
+
+
+def test_badges_escape_db_text():
+    viewer = get_viewer()
+    assert XSS not in viewer._badge(XSS)
+    assert XSS not in viewer._priority_badge(XSS)
+
+
+def test_host_allowlist():
+    viewer = get_viewer()
+    for ok in ["127.0.0.1", "localhost", "127.0.0.1:39000", "LOCALHOST:8080"]:
+        assert viewer._host_allowed(ok), ok
+    for bad in [None, "", "evil.com", "evil.com:39000", "localhost.evil.com",
+                "127.0.0.1.nip.io", "localhost:abc", "127.0.0.1:39000@evil.com"]:
+        assert not viewer._host_allowed(bad), bad
+
+
+def test_server_rejects_foreign_host_header():
+    import http.client
+    import threading
+    from http.server import HTTPServer
+    viewer = get_viewer()
+    server = HTTPServer(("127.0.0.1", 0), viewer.RepoMemHandler)
+    port = server.server_address[1]
+    t = threading.Thread(target=server.serve_forever, daemon=True)
+    t.start()
+    try:
+        def status_for(host):
+            conn = http.client.HTTPConnection("127.0.0.1", port, timeout=5)
+            conn.request("GET", "/api/stats", headers={"Host": host})
+            status = conn.getresponse().status
+            conn.close()
+            return status
+        assert status_for(f"localhost:{port}") == 200
+        assert status_for(f"127.0.0.1:{port}") == 200
+        assert status_for(f"evil.com:{port}") == 403
+    finally:
+        server.shutdown()
+        server.server_close()
