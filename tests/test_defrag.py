@@ -73,10 +73,12 @@ def test_defrag_merges_duplicates():
     assert stats["merged"] >= 1
 
 
-def test_defrag_archives_stale_old_low_confidence():
+def test_defrag_archives_old_seen_once():
+    # Confidence stays at the 1.0 default on purpose: nothing in production ever
+    # writes it lower, so a fixture passing 0.3 hid the dead `confidence < 0.5` term.
     from repomem.db import get_connection
     s = make_session()
-    obs_id = make_obs(s.id, confidence=0.3, days_ago=100, summary="old low confidence obs")
+    obs_id = make_obs(s.id, days_ago=100, summary="old seen-once obs")
 
     mod = get_defrag()
     conn = get_connection()
@@ -90,10 +92,10 @@ def test_defrag_archives_stale_old_low_confidence():
     assert stats["archived"] >= 1
 
 
-def test_defrag_keeps_recent_low_confidence():
+def test_defrag_keeps_recent():
     from repomem.db import get_connection
     s = make_session()
-    obs_id = make_obs(s.id, confidence=0.3, days_ago=0)
+    obs_id = make_obs(s.id, days_ago=0)
 
     mod = get_defrag()
     conn = get_connection()
@@ -104,6 +106,26 @@ def test_defrag_keeps_recent_low_confidence():
     row = conn.execute("SELECT is_archived FROM observations WHERE id=?", (obs_id,)).fetchone()
     conn.close()
     assert row["is_archived"] == 0
+
+
+def test_defrag_keeps_old_obs_seen_more_than_once():
+    from repomem.db import get_connection
+    s = make_session()
+    obs_id = make_obs(s.id, days_ago=100, summary="old but repeatedly confirmed")
+
+    conn = get_connection()
+    conn.execute("UPDATE observations SET seen_count=4 WHERE id=?", (obs_id,))
+    conn.commit()
+
+    mod = get_defrag()
+    stats = {}
+    mod.step_archive_stale(conn, stats)
+    conn.commit()
+
+    row = conn.execute("SELECT is_archived FROM observations WHERE id=?", (obs_id,)).fetchone()
+    conn.close()
+    assert row["is_archived"] == 0
+    assert stats["archived"] == 0
 
 
 def test_defrag_trims_oversized_detail():

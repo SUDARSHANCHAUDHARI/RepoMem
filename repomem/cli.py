@@ -408,10 +408,11 @@ def cmd_doctor(args) -> None:
         if orphaned > 0:
             issues.append(f"{orphaned} orphaned observations (missing session row)")
 
-        # FTS5 sync check
+        # FTS5 sync check — the triggers index every observation row, archived included
+        # (archiving is an UPDATE, which re-inserts), so compare against total, not active.
         fts_count = conn.execute("SELECT COUNT(*) FROM observations_fts").fetchone()[0]
-        if abs(fts_count - active) > 5:
-            issues.append(f"FTS5 out of sync ({fts_count} indexed vs {active} active)")
+        if abs(fts_count - total) > 5:
+            issues.append(f"FTS5 out of sync ({fts_count} indexed vs {total} observations)")
             recommendations.append("Run `python3 ~/.repomem/crons/defrag.py` to rebuild FTS5")
 
         # Projects with no observations
