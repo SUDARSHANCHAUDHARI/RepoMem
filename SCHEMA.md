@@ -93,6 +93,14 @@ Open tasks across all projects.
 | `created_at` | TEXT | YYYY-MM-DD |
 | `resolved_at` | TEXT | YYYY-MM-DD (NULL if open) |
 | `session_id` | TEXT | Session that created this task |
+| `claimed_by` | TEXT | Session or agent holding the task (NULL if unclaimed). Schema v4 |
+| `claimed_at` | TEXT | ISO-8601 UTC time of the claim; a claim older than 24h can be taken over. Schema v4 |
+| `handoff_note` | TEXT | Note left for whoever picks the task up next. Schema v4 |
+
+An open task with the same project and normalized text (case, spacing and trailing punctuation
+ignored) is not added twice: `add-pending` returns the existing id. An observation repeating an
+unarchived one (same project, type and normalized summary) raises its `seen_count` instead of adding
+a row.
 
 ---
 
@@ -199,4 +207,4 @@ Single-row version tracker for migrations.
 
 | Column | Type | Description |
 |--------|------|-------------|
-| `version` | INTEGER PK | Current schema version |
+| `version` | INTEGER PK | Current schema version (4: pending claim / release / handoff) |

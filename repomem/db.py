@@ -12,7 +12,7 @@ from contextlib import contextmanager
 from .config import DB_PATH, ensure_dirs
 from .models import Session, Observation, Decision, Pending, Pattern, SearchResult
 
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
 
 DDL = """
 PRAGMA journal_mode = WAL;
@@ -103,7 +103,10 @@ CREATE TABLE IF NOT EXISTS pending (
     priority    TEXT NOT NULL DEFAULT 'P2',
     created_at  TEXT NOT NULL,
     resolved_at TEXT,
-    session_id  TEXT NOT NULL DEFAULT ''
+    session_id  TEXT NOT NULL DEFAULT '',
+    claimed_by  TEXT,
+    claimed_at  TEXT,
+    handoff_note TEXT
 );
 
 -- ── Patterns ──────────────────────────────────────────────────────────────────
@@ -303,6 +306,12 @@ def _run_migrations(conn: sqlite3.Connection, from_version: int) -> None:
             if not _table_exists(table):
                 conn.execute(ddl)
 
+    # v3 → v4: claim / release / handoff on pending tasks
+    if from_version < 4:
+        for col in ("claimed_by", "claimed_at", "handoff_note"):
+            if _col_exists("pending", "id") and not _col_exists("pending", col):
+                conn.execute(f"ALTER TABLE pending ADD COLUMN {col} TEXT")
+
 
 # ── Sessions ──────────────────────────────────────────────────────────────────
 
@@ -333,8 +342,26 @@ def get_session(session_id: str) -> Optional[dict]:
 
 # ── Observations ──────────────────────────────────────────────────────────────
 
+def normalize_text(text: str) -> str:
+    """Lower case, whitespace collapsed, trailing punctuation dropped: the key for duplicate checks."""
+    return " ".join((text or "").lower().split()).rstrip(" .!?")
+
+
 def save_observation(obs: Observation) -> int:
+    return add_observation(obs)[0]
+
+
+def add_observation(obs: Observation) -> tuple[int, bool]:
+    """Insert, or when an unarchived observation with the same project, type and summary exists, bump its
+    seen_count instead. Returns (id, created)."""
+    key = normalize_text(obs.summary)
     with db() as conn:
+        for row in conn.execute(
+                "SELECT id, summary FROM observations WHERE project=? AND type=? AND is_archived=0",
+                (obs.project, obs.type)):
+            if normalize_text(row["summary"]) == key:
+                conn.execute("UPDATE observations SET seen_count = seen_count + 1 WHERE id=?", (row["id"],))
+                return row["id"], False
         cur = conn.execute("""
             INSERT INTO observations
             (session_id, project, folder, type, topic, summary, detail,
@@ -345,7 +372,7 @@ def save_observation(obs: Observation) -> int:
               obs.summary, obs.detail, obs.date, obs.created_at, obs.confidence,
               obs.seen_count, obs.is_stale, obs.is_resolved, obs.is_archived,
               obs.related_ids))
-        return cur.lastrowid
+        return cur.lastrowid, True
 
 
 def get_observations(project: str, limit: int = 10,
@@ -456,13 +483,23 @@ def get_decisions(scope: Optional[str] = None) -> list[dict]:
 # ── Pending tasks ─────────────────────────────────────────────────────────────
 
 def save_pending(pending: Pending) -> int:
+    return add_pending(pending)[0]
+
+
+def add_pending(pending: Pending) -> tuple[int, bool]:
+    """Insert, unless an open task with the same project and text exists. Returns (id, created)."""
+    key = normalize_text(pending.task)
     with db() as conn:
+        for row in conn.execute("SELECT id, task FROM pending WHERE project=? AND resolved_at IS NULL",
+                                (pending.project,)):
+            if normalize_text(row["task"]) == key:
+                return row["id"], False
         cur = conn.execute("""
             INSERT INTO pending (project, task, priority, created_at, session_id)
             VALUES (?, ?, ?, ?, ?)
         """, (pending.project, pending.task, pending.priority,
               pending.created_at, pending.session_id))
-        return cur.lastrowid
+        return cur.lastrowid, True
 
 
 def get_pending(project: Optional[str] = None) -> list[dict]:
@@ -488,6 +525,58 @@ def resolve_pending(pending_id: int) -> None:
         conn.execute("""
             UPDATE pending SET resolved_at=? WHERE id=?
         """, (date.today().isoformat(), pending_id))
+
+
+CLAIM_STALE_HOURS = 24
+
+
+def _now_iso() -> str:
+    from datetime import datetime, timezone
+    return datetime.now(timezone.utc).isoformat(timespec="seconds")
+
+
+def claim_pending(pending_id: int, who: str, stale_hours: int = CLAIM_STALE_HOURS) -> tuple[bool, Optional[str]]:
+    """Claim an open task for `who`. Succeeds when it is unclaimed, already held by `who`, or the other
+    claim is older than stale_hours. Returns (ok, current holder)."""
+    from datetime import datetime, timedelta, timezone
+    cutoff = (datetime.now(timezone.utc) - timedelta(hours=stale_hours)).isoformat(timespec="seconds")
+    with db() as conn:
+        cur = conn.execute("""
+            UPDATE pending SET claimed_by=?, claimed_at=?
+            WHERE id=? AND resolved_at IS NULL
+              AND (claimed_by IS NULL OR claimed_by=? OR claimed_at < ?)
+        """, (who, _now_iso(), pending_id, who, cutoff))
+        if cur.rowcount:
+            return True, who
+        row = conn.execute("SELECT claimed_by, resolved_at FROM pending WHERE id=?", (pending_id,)).fetchone()
+        if row is None:
+            raise KeyError(f"no pending task #{pending_id}")
+        if row["resolved_at"]:
+            raise ValueError(f"pending task #{pending_id} is already resolved")
+        return False, row["claimed_by"]
+
+
+def release_pending(pending_id: int, who: Optional[str] = None) -> bool:
+    """Drop the claim. With `who`, only that holder's claim is dropped. Returns whether one was."""
+    with db() as conn:
+        if who is None:
+            cur = conn.execute("UPDATE pending SET claimed_by=NULL, claimed_at=NULL WHERE id=? AND claimed_by IS NOT NULL",
+                               (pending_id,))
+        else:
+            cur = conn.execute("UPDATE pending SET claimed_by=NULL, claimed_at=NULL WHERE id=? AND claimed_by=?",
+                               (pending_id, who))
+        return bool(cur.rowcount)
+
+
+def handoff_pending(pending_id: int, note: str, to: Optional[str] = None) -> None:
+    """Leave a note for whoever picks the task up next, and pass the claim to `to` (or release it)."""
+    with db() as conn:
+        cur = conn.execute("""
+            UPDATE pending SET handoff_note=?, claimed_by=?, claimed_at=?
+            WHERE id=? AND resolved_at IS NULL
+        """, (note, to, _now_iso() if to else None, pending_id))
+        if not cur.rowcount:
+            raise KeyError(f"no open pending task #{pending_id}")
 
 
 # ── Patterns ──────────────────────────────────────────────────────────────────

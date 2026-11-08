@@ -95,8 +95,11 @@ def cmd_add(args) -> None:
         date=date.today().isoformat(),
         created_at=int(time.time()),
     )
-    obs_id = db.save_observation(obs)
-    print(f"✅ Saved observation #{obs_id}: [{args.type}] {args.summary}")
+    obs_id, created = db.add_observation(obs)
+    if created:
+        print(f"✅ Saved observation #{obs_id}: [{args.type}] {args.summary}")
+    else:
+        print(f"↺ Already saved as observation #{obs_id}; seen count raised")
 
 
 def cmd_pending(args) -> None:
@@ -109,10 +112,14 @@ def cmd_pending(args) -> None:
         print("No pending tasks." + (f" (project: {project})" if project else ""))
         return
 
-    print(f"{'Project':<20} {'Pri':<4} {'Task'}")
+    print(f"{'ID':<6} {'Project':<20} {'Pri':<4} {'Task'}")
     print("-" * 70)
     for p in items:
-        print(f"{p['project']:<20} {p['priority']:<4} {p['task']}")
+        print(f"#{p['id']:<5} {p['project']:<20} {p['priority']:<4} {p['task']}")
+        if p.get("claimed_by"):
+            print(f"{'':<32}claimed by {p['claimed_by']} since {p['claimed_at']}")
+        if p.get("handoff_note"):
+            print(f"{'':<32}handoff: {p['handoff_note']}")
 
 
 def cmd_add_pending(args) -> None:
@@ -130,8 +137,48 @@ def cmd_add_pending(args) -> None:
         priority=args.priority,
         session_id="manual"
     )
-    pid = db.save_pending(p)
-    print(f"✅ Added pending task #{pid}: [{args.priority}] {args.task}")
+    pid, created = db.add_pending(p)
+    if created:
+        print(f"✅ Added pending task #{pid}: [{args.priority}] {args.task}")
+    else:
+        print(f"↺ Already pending as #{pid}; nothing added")
+
+
+def agent_name(explicit: Optional[str] = None) -> str:
+    """Who holds a claim: --as, else $REPOMEM_AGENT, else the Claude Code session id, else user@pid."""
+    import getpass
+    return (explicit or os.environ.get("REPOMEM_AGENT") or os.environ.get("CLAUDE_CODE_SESSION_ID")
+            or f"{getpass.getuser()}@{os.getppid()}")
+
+
+def cmd_claim(args) -> None:
+    """Claim a pending task so other sessions leave it alone."""
+    db.init_db()
+    who = agent_name(args.as_)
+    ok, holder = db.claim_pending(args.id, who)
+    if ok:
+        print(f"✅ Claimed #{args.id} as {who}")
+    else:
+        print(f"✋ #{args.id} is claimed by {holder}; not taken (claims older than "
+              f"{db.CLAIM_STALE_HOURS}h can be taken over)")
+        sys.exit(1)
+
+
+def cmd_release(args) -> None:
+    """Release a claim on a pending task."""
+    db.init_db()
+    who = None if args.force else agent_name(args.as_)
+    if db.release_pending(args.id, who):
+        print(f"✅ Released #{args.id}")
+    else:
+        print(f"Nothing to release on #{args.id}" + ("" if args.force else f" for {who} (use --force for any holder)"))
+
+
+def cmd_handoff(args) -> None:
+    """Leave a note on a pending task and pass or release its claim."""
+    db.init_db()
+    db.handoff_pending(args.id, args.note, args.to)
+    print(f"✅ Handoff note on #{args.id}" + (f", claim passed to {args.to}" if args.to else ", claim released"))
 
 
 def cmd_resolve(args) -> None:
@@ -547,6 +594,19 @@ def main() -> None:
     p_addp.add_argument("--project", "-p")
     p_addp.add_argument("--priority", default="P2", choices=["P1", "P2", "P3"])
 
+    # claim / release / handoff
+    p_claim = sub.add_parser("claim", help="Claim a pending task for this session")
+    p_claim.add_argument("id", type=int)
+    p_claim.add_argument("--as", dest="as_", help="claim holder name (default: session id)")
+    p_rel = sub.add_parser("release", help="Release a claim on a pending task")
+    p_rel.add_argument("id", type=int)
+    p_rel.add_argument("--as", dest="as_", help="claim holder name (default: session id)")
+    p_rel.add_argument("--force", action="store_true", help="release whoever holds it")
+    p_hand = sub.add_parser("handoff", help="Leave a handoff note and pass or release the claim")
+    p_hand.add_argument("id", type=int)
+    p_hand.add_argument("note")
+    p_hand.add_argument("--to", help="pass the claim to this holder")
+
     # resolve
     p_resolve = sub.add_parser("resolve", help="Resolve a pending task")
     p_resolve.add_argument("id", type=int)
@@ -645,6 +705,9 @@ def main() -> None:
         "pending": cmd_pending,
         "add-pending": cmd_add_pending,
         "resolve": cmd_resolve,
+        "claim": cmd_claim,
+        "release": cmd_release,
+        "handoff": cmd_handoff,
         "resolve-error": cmd_resolve_error,
         "merge-branch": cmd_merge_branch,
         "import-chat": cmd_import_chat,

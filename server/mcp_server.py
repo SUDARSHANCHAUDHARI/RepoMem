@@ -200,6 +200,44 @@ TOOLS = [
             "required": ["id"],
         },
     },
+    {
+        "name": "repomem_claim",
+        "description": "Claim a pending task so other sessions leave it alone. Claims older than 24h can be taken over.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "id": {"type": "integer", "description": "Pending task ID"},
+                "as": {"type": "string", "description": "Claim holder name (default: session id)"},
+            },
+            "required": ["id"],
+        },
+    },
+    {
+        "name": "repomem_release",
+        "description": "Release this session's claim on a pending task (force: release any holder).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "id": {"type": "integer", "description": "Pending task ID"},
+                "as": {"type": "string", "description": "Claim holder name (default: session id)"},
+                "force": {"type": "boolean", "description": "Release whoever holds it"},
+            },
+            "required": ["id"],
+        },
+    },
+    {
+        "name": "repomem_handoff",
+        "description": "Leave a handoff note on a pending task and pass the claim to another holder, or release it.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "id": {"type": "integer", "description": "Pending task ID"},
+                "note": {"type": "string", "description": "What the next session needs to know"},
+                "to": {"type": "string", "description": "Pass the claim to this holder (optional)"},
+            },
+            "required": ["id", "note"],
+        },
+    },
 ]
 
 
@@ -253,7 +291,7 @@ def _ensure_mcp_session(session_id: str, project: str, folder: str) -> None:
 def handle_repomem_save(args: dict) -> dict:
     import time
     from datetime import date as _date
-    from repomem.db import save_observation, init_db
+    from repomem.db import add_observation, init_db
     from repomem.models import Observation
     from repomem.capture import detect_project, detect_topic
 
@@ -279,7 +317,9 @@ def handle_repomem_save(args: dict) -> dict:
         date=_date.today().isoformat(),
         created_at=int(time.time()),
     )
-    obs_id = save_observation(obs)
+    obs_id, created = add_observation(obs)
+    if not created:
+        return {"content": [{"type": "text", "text": f"Already saved as observation #{obs_id}; seen count raised"}]}
     from repomem.entity import link_observation
     link_observation(obs_id, project, obs.summary + " " + obs.detail)
     return {"content": [{"type": "text", "text": f"Saved observation #{obs_id}: [{args['type']}] {args['summary'][:80]}"}]}
@@ -300,7 +340,9 @@ def handle_repomem_pending(args: dict) -> dict:
     items = get_pending(project=args.get("project"))
     if not items:
         return {"content": [{"type": "text", "text": "No pending tasks."}]}
-    lines = [f"[#{p['id']}] [{p['priority']}] {p['project']}: {p['task']}" for p in items]
+    lines = [f"[#{p['id']}] [{p['priority']}] {p['project']}: {p['task']}"
+             + (f" (claimed by {p['claimed_by']})" if p.get("claimed_by") else "")
+             + (f" — handoff: {p['handoff_note']}" if p.get("handoff_note") else "") for p in items]
     return {"content": [{"type": "text", "text": "\n".join(lines)}]}
 
 
@@ -315,7 +357,7 @@ def handle_repomem_decisions(args: dict) -> dict:
 
 
 def handle_repomem_add_pending(args: dict) -> dict:
-    from repomem.db import save_pending, init_db
+    from repomem.db import add_pending, init_db
     from repomem.models import Pending
     from repomem.capture import detect_project
     init_db()
@@ -328,8 +370,38 @@ def handle_repomem_add_pending(args: dict) -> dict:
         priority=args.get("priority", "P2"),
         session_id=os.environ.get("CLAUDE_CODE_SESSION_ID", "mcp"),
     )
-    pid = save_pending(p)
+    pid, created = add_pending(p)
+    if not created:
+        return {"content": [{"type": "text", "text": f"Already pending as #{pid}; nothing added"}]}
     return {"content": [{"type": "text", "text": f"Added pending task #{pid}: [{p.priority}] {args['task']}"}]}
+
+
+def _agent(args: dict) -> str:
+    return args.get("as") or os.environ.get("REPOMEM_AGENT") or os.environ.get("CLAUDE_CODE_SESSION_ID", "mcp")
+
+
+def handle_repomem_claim(args: dict) -> dict:
+    from repomem.db import claim_pending, init_db, CLAIM_STALE_HOURS
+    init_db()
+    who = _agent(args)
+    ok, holder = claim_pending(args["id"], who)
+    text = (f"Claimed #{args['id']} as {who}" if ok else
+            f"#{args['id']} is claimed by {holder}; not taken (claims older than {CLAIM_STALE_HOURS}h can be taken over)")
+    return {"content": [{"type": "text", "text": text}]}
+
+
+def handle_repomem_release(args: dict) -> dict:
+    from repomem.db import release_pending, init_db
+    init_db()
+    released = release_pending(args["id"], None if args.get("force") else _agent(args))
+    return {"content": [{"type": "text", "text": f"Released #{args['id']}" if released else f"Nothing to release on #{args['id']}"}]}
+
+
+def handle_repomem_handoff(args: dict) -> dict:
+    from repomem.db import handoff_pending, init_db
+    init_db()
+    handoff_pending(args["id"], args["note"], args.get("to"))
+    return {"content": [{"type": "text", "text": f"Handoff note on #{args['id']}" + (f", claim passed to {args['to']}" if args.get("to") else ", claim released")}]}
 
 
 def handle_repomem_resolve(args: dict) -> dict:
@@ -348,6 +420,9 @@ HANDLERS = {
     "repomem_decisions":   handle_repomem_decisions,
     "repomem_add_pending": handle_repomem_add_pending,
     "repomem_resolve":     handle_repomem_resolve,
+    "repomem_claim":       handle_repomem_claim,
+    "repomem_release":     handle_repomem_release,
+    "repomem_handoff":     handle_repomem_handoff,
 }
 
 
