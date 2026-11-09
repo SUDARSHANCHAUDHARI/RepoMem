@@ -8,6 +8,18 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ## [Unreleased]
 
+### Added
+- Pending-task claims (schema v4): `repomem claim`, `release` and `handoff`, plus the
+  `repomem_claim`, `repomem_release` and `repomem_handoff` MCP tools. A claim names its holder
+  (`--as`, `$REPOMEM_AGENT` or the Claude Code session id) so two sessions do not pick the same task;
+  a claim older than 24h can be taken over. `repomem pending` shows ids, holders and handoff notes
+- Write-time duplicate checks: an open pending task with the same project and normalized text is not
+  added again, and a repeated observation raises `seen_count` instead of adding a row. Auto-capture
+  links entities only for new observations
+
+### Changed
+- `repomem pending` prints each task's id
+
 ---
 
 ## [0.4.0] — 2026-06-18

@@ -251,9 +251,10 @@ def capture_session(session_summary: str, session_id: Optional[str] = None,
     from .entity import link_observation
     count = 0
     for obs in observations:
-        obs_id = db.save_observation(obs)
-        link_observation(obs_id, project, obs.summary + " " + obs.detail)
-        count += 1
+        obs_id, created = db.add_observation(obs)
+        if created:  # a repeat only raises seen_count; its entities are already linked
+            link_observation(obs_id, project, obs.summary + " " + obs.detail)
+            count += 1
 
     # Enrich observations with graphify god nodes (if graph exists)
     _enrich_with_graphify(project, repo_path, observations)

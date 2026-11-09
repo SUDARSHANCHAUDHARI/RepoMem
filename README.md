@@ -197,6 +197,9 @@ When an MCP client connects to RepoMem's server, 8 tools become available mid-se
 | `repomem_decisions` | `scope?` | Architectural decisions (global or project-scoped) |
 | `repomem_add_pending` | `task`, `project?`, `priority?` | Add a pending task to the queue |
 | `repomem_resolve` | `id` | Mark a pending task as resolved |
+| `repomem_claim` | `id`, `as?` | Claim a pending task so other sessions leave it alone |
+| `repomem_release` | `id`, `as?`, `force?` | Release a claim |
+| `repomem_handoff` | `id`, `note`, `to?` | Leave a handoff note and pass or release the claim |
 
 ---
 
@@ -230,6 +233,9 @@ RepoMem captures 8 structured types automatically from session text:
 | `repomem pending` | List open tasks, optional `--project` |
 | `repomem add-pending <task>` | Add a task with `--priority P1/P2/P3` |
 | `repomem resolve <id>` | Mark a pending task resolved |
+| `repomem claim <id> [--as NAME]` | Claim a pending task; another session's claim blocks it until released or 24h old |
+| `repomem release <id> [--as NAME \| --force]` | Release your claim, or any claim with `--force` |
+| `repomem handoff <id> "<note>" [--to NAME]` | Leave a note for the next session and pass or release the claim |
 | `repomem resolve-error <id>` | Mark a tracked error as resolved |
 | `repomem decisions` | List architectural decisions |
 | `repomem add-decision` | Record a decision with `--topic`, `--scope`, `--reason` |
