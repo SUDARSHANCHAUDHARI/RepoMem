@@ -154,6 +154,43 @@ def test_doctor_passes_on_fresh_db():
     assert "✅" in output or "checks passed" in output
 
 
+def test_doctor_fts_check_ignores_archived_rows():
+    """
+    The FTS triggers index every observation row, archived included. A fresh DB
+    has nothing archived, so comparing the index against the *active* count only
+    looked correct until rows were archived — then it warned forever.
+    """
+    from repomem.db import get_connection, save_session, save_observation
+    from repomem.models import Session, Observation
+    from datetime import date
+
+    s = Session(project="TestApp", repo_path="/tmp")
+    save_session(s)
+    ids = [
+        save_observation(Observation(
+            session_id=s.id, project="TestApp", type="bugfix",
+            summary=f"observation {i}", topic="build",
+            date=date.today().isoformat(), created_at=int(time.time()),
+        ))
+        for i in range(10)
+    ]
+
+    conn = get_connection()
+    conn.executemany(
+        "UPDATE observations SET is_archived=1 WHERE id=?", [(i,) for i in ids[:8]]
+    )
+    conn.commit()
+    indexed = conn.execute("SELECT COUNT(*) FROM observations_fts").fetchone()[0]
+    active = conn.execute("SELECT COUNT(*) FROM observations WHERE is_archived=0").fetchone()[0]
+    conn.close()
+
+    # Guard the premise: the index really does keep the archived rows.
+    assert indexed == 10 and active == 2
+
+    output = run_cli("doctor")
+    assert "FTS5 out of sync" not in output
+
+
 # ── entities ─────────────────────────────────────────────────────────────────
 
 def test_entities_empty():

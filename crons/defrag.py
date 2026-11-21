@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 RepoMem defrag — weekly memory cleanup (Sunday 3am).
-Steps: merge near-duplicate obs, archive stale low-confidence obs,
+Steps: merge near-duplicate obs, archive old seen-once obs,
        split oversized obs, rebuild FTS5 index, vacuum DB.
 
 Cron: 0 3 * * 0 python3 ~/.repomem/crons/defrag.py >> ~/.repomem/logs/defrag.log 2>&1
@@ -65,14 +65,17 @@ def step_merge_duplicates(conn, stats: dict) -> None:
 
 def step_archive_stale(conn, stats: dict) -> None:
     """
-    Archive observations older than 90 days with low confidence (<0.5)
-    that haven't been seen recently (seen_count=1).
+    Archive observations older than 90 days that were only ever seen once.
+
+    Nothing writes a confidence below the 1.0 schema default, so the old
+    `confidence < 0.5` term matched zero rows and this step never archived
+    anything. Age plus seen_count=1 is the signal that actually discriminates.
     """
     cutoff = (date.today() - timedelta(days=90)).isoformat()
     result = conn.execute("""
         UPDATE observations
         SET is_archived=1
-        WHERE date < ? AND confidence < 0.5 AND seen_count=1
+        WHERE date < ? AND seen_count=1
           AND is_stale=0 AND is_archived=0
     """, (cutoff,))
     stats["archived"] = result.rowcount
